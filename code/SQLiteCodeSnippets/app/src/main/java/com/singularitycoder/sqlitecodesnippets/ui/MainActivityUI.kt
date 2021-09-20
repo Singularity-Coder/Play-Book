@@ -13,6 +13,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.singularitycoder.sqlitecodesnippets.db.DbOps
 import com.singularitycoder.sqlitecodesnippets.ui.theme.Teal200
@@ -21,12 +22,34 @@ import com.singularitycoder.sqlitecodesnippets.ui.theme.Teal900
 
 @Composable
 fun MainActivityUI(dbOps: DbOps) {
+    val queryState = remember { mutableStateOf("Query") }
+
+    @Composable
+    fun DefaultButton(
+        queryText: String,
+        paddingTop: Dp,
+        btnText: String,
+        onBtnClick: () -> Unit
+    ) {
+        Button(
+            onClick = {
+                queryState.value = queryText
+                onBtnClick.invoke()
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 0.dp, top = paddingTop, end = 0.dp, bottom = 0.dp),
+        ) {
+            Text(btnText)
+        }
+    }
+
     Surface(color = MaterialTheme.colors.background) {
 
         Column(modifier = Modifier.fillMaxWidth()) {
-            val queryState = remember { mutableStateOf("Query") }
 
             TopAppBar(title = { Text("SQLite") })
+
             Surface(
                 modifier = Modifier.background(color = Teal200),
                 color = Teal201,
@@ -45,150 +68,100 @@ fun MainActivityUI(dbOps: DbOps) {
                 )
             }
 
-            // CREATE --------------------------------------------------------------------------------------------------------------------------------------------------------
-
             Column(
                 modifier = Modifier
                     .verticalScroll(rememberScrollState())
                     .padding(start = 16.dp, top = 0.dp, end = 16.dp, bottom = 0.dp)
             ) {
+
                 Spacer(Modifier.height(16.dp))
 
-                Button(
-                    onClick = {
-                        queryState.value = "INSERT INTO todo_table (todo_uid,todo_task_name,todo_completed) VALUES (Todo)"
-                        dbOps.createATodo()
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text("Create Todo")
-                }
+                // CREATE --------------------------------------------------------------------------------------------------------------------------------------------------------
 
-                Button(
-                    onClick = {
-                        queryState.value = "INSERT INTO todo_table (Todo)"
-                        dbOps.createMultipleTodos()
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 0.dp, top = 8.dp, end = 0.dp, bottom = 0.dp),
-                ) {
-                    Text("Create Multiple Todos")
-                }
+                DefaultButton(
+                    queryText = "INSERT INTO todo_table (todo_uid,todo_task_name,todo_completed) VALUES (Todo)",
+                    paddingTop = 0.dp,
+                    btnText = "Create Todo",
+                    onBtnClick = { dbOps.createATodo() }
+                )
+
+                DefaultButton(
+                    queryText = "INSERT INTO todo_table (Todo)",
+                    paddingTop = 8.dp,
+                    btnText = "Create Multiple Todos",
+                    onBtnClick = { dbOps.createMultipleTodos() }
+                )
 
                 // READ --------------------------------------------------------------------------------------------------------------------------------------------------------
 
-                Button(
-                    onClick = {
-                        queryState.value = "SELECT * FROM todo_table WHERE todo_uid LIKE uid"
-                        dbOps.readTodoById()
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 0.dp, top = 16.dp, end = 0.dp, bottom = 0.dp),
-                ) {
-                    Text("Read Todo By Id")
-                }
+                DefaultButton(
+                    queryText = "SELECT * FROM todo_table WHERE todo_uid LIKE uid",
+                    paddingTop = 16.dp,
+                    btnText = "Read Todo By Id",
+                    onBtnClick = { dbOps.readTodoById() }
+                )
 
-                Button(
-                    onClick = {
-                        queryState.value = "SELECT * FROM todo_table"
-                        dbOps.readAllTodos()
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 0.dp, top = 8.dp, end = 0.dp, bottom = 0.dp),
-                ) {
-                    Text("Read All Todos")
-                }
+                DefaultButton(
+                    queryText = "SELECT * FROM todo_table",
+                    paddingTop = 8.dp,
+                    btnText = "Read All Todos",
+                    onBtnClick = { dbOps.readAllTodos() }
+                )
 
-                Button(
-                    onClick = {
-                        queryState.value = "SELECT * FROM todo_table WHERE todo_completed LIKE todoState"
-                        dbOps.readAllCompletedTodos()
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 0.dp, top = 8.dp, end = 0.dp, bottom = 0.dp),
-                ) {
-                    Text("Read All Completed Todos")
-                }
+                DefaultButton(
+                    queryText = "SELECT * FROM todo_table WHERE todo_completed LIKE todoState",
+                    paddingTop = 8.dp,
+                    btnText = "Read All Completed Todos",
+                    onBtnClick = { dbOps.readAllCompletedTodos() }
+                )
 
                 // UPDATE --------------------------------------------------------------------------------------------------------------------------------------------------------
 
-                Button(
-                    onClick = {
-                        queryState.value = "UPDATE todo_table SET (todo_uid,todo_task_name,todo_completed) = Todo"
-                        dbOps.updateATodo()
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 0.dp, top = 16.dp, end = 0.dp, bottom = 0.dp),
-                ) {
-                    Text("Update Todo By Object")
-                }
+                DefaultButton(
+                    queryText = "UPDATE todo_table SET (todo_uid,todo_task_name,todo_completed) = Todo",
+                    paddingTop = 16.dp,
+                    btnText = "Update Todo By Object",
+                    onBtnClick = { dbOps.updateATodo() }
+                )
 
-                Button(
-                    onClick = {
-                        queryState.value = "UPDATE todo_table SET todo_completed = todoState"
-                        dbOps.updateAllTodosIncomplete()
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 0.dp, top = 8.dp, end = 0.dp, bottom = 0.dp),
-                ) {
-                    Text("Update All Todos State")
-                }
+                DefaultButton(
+                    queryText = "UPDATE todo_table SET todo_completed = todoState",
+                    paddingTop = 8.dp,
+                    btnText = "Update All Todos State",
+                    onBtnClick = { dbOps.updateAllTodosIncomplete() }
+                )
 
-                Button(
-                    onClick = {
-                        queryState.value = "UPDATE todo_table SET todo_task_name = todoName WHERE todo_completed LIKE 1"
-                        dbOps.updateAllCompletedTodoNames()
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 0.dp, top = 8.dp, end = 0.dp, bottom = 0.dp),
-                ) {
-                    Text("Update All Completed Todo Names")
-                }
+                DefaultButton(
+                    queryText = "UPDATE todo_table SET todo_task_name = todoName WHERE todo_completed LIKE 1",
+                    paddingTop = 8.dp,
+                    btnText = "Update All Completed Todo Names",
+                    onBtnClick = { dbOps.updateAllCompletedTodoNames() }
+                )
 
                 // DELETE --------------------------------------------------------------------------------------------------------------------------------------------------------
 
-                Button(
-                    onClick = {
-                        queryState.value = "DELETE FROM todo_table WHERE (todo_uid,todo_task_name,todo_completed) = Todo"
-                        dbOps.deleteATodo()
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 0.dp, top = 16.dp, end = 0.dp, bottom = 0.dp),
-                ) {
-                    Text("Delete Todo By Object")
-                }
+                DefaultButton(
+                    queryText = "DELETE FROM todo_table WHERE (todo_uid,todo_task_name,todo_completed) = Todo",
+                    paddingTop = 16.dp,
+                    btnText = "Delete Todo By Object",
+                    onBtnClick = { dbOps.deleteATodo() }
+                )
 
-                Button(
-                    onClick = {
-                        queryState.value = "DELETE FROM todo_table WHERE todo_completed = todoState"
-                        dbOps.deleteAllTodosByState()
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 0.dp, top = 8.dp, end = 0.dp, bottom = 0.dp),
-                ) {
-                    Text("Delete All Todos By State")
-                }
+                DefaultButton(
+                    queryText = "DELETE FROM todo_table WHERE todo_completed = todoState",
+                    paddingTop = 8.dp,
+                    btnText = "Delete All Todos By State",
+                    onBtnClick = { dbOps.deleteAllTodosByState() }
+                )
 
-                Button(
-                    onClick = {
-                        queryState.value = "DELETE FROM todo_table"
-                        dbOps.deleteAllTodos()
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 0.dp, top = 8.dp, end = 0.dp, bottom = 64.dp),
-                ) {
-                    Text("Delete All Todos")
-                }
+                DefaultButton(
+                    queryText = "DELETE FROM todo_table",
+                    paddingTop = 8.dp,
+                    btnText = "Delete All Todos",
+                    onBtnClick = { dbOps.deleteAllTodos() }
+                )
+
+                Spacer(Modifier.height(16.dp))
             }
         }
     }
