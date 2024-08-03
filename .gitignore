@@ -1,0 +1,10 @@
+*.iml
+/local.properties
+/.idea
+/code/PlayBooks/.idea/
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
