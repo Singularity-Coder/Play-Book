@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/cl_eraser_settings"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/purple_700"
+    android:visibility="visible">
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tv_slider_title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:text="Eraser Thickness"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+        android:textColor="@color/md_indigo_100"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tv_value"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:text="0"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+        android:textColor="@color/md_indigo_100"
+        app:layout_constraintBottom_toBottomOf="@+id/tv_slider_title"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/tv_slider_title" />
+
+    <ImageButton
+        android:id="@+id/ib_reduce"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginStart="16dp"
+        android:background="@drawable/shape_rounded_square"
+        android:src="@drawable/round_remove_24"
+        app:layout_constraintBottom_toBottomOf="@+id/ll_slider_custom"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/ll_slider_custom"
+        app:tint="@color/purple_700" />
+
+    <LinearLayout
+        android:id="@+id/ll_slider_custom"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/ib_increase"
+        app:layout_constraintStart_toEndOf="@+id/ib_reduce"
+        app:layout_constraintTop_toBottomOf="@+id/tv_slider_title">
+
+        <SeekBar
+            android:id="@+id/slider_custom"
+            android:layout_width="match_parent"
+            android:layout_height="32dp"
+            android:layout_marginStart="-8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="-8dp"
+            android:layout_marginBottom="4dp"
+            android:max="10"
+            android:maxWidth="16dp"
+            android:maxHeight="16dp"
+            android:min="0"
+            android:minWidth="16dp"
+            android:minHeight="10dp"
+            android:progress="5"
+            android:progressDrawable="@drawable/custom_track_drawable"
+            android:splitTrack="false"
+            android:thumb="@color/white" />
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/ib_increase"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginEnd="16dp"
+        android:background="@drawable/shape_rounded_square"
+        android:src="@drawable/ic_round_add_24"
+        app:layout_constraintBottom_toBottomOf="@+id/ll_slider_custom"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/ll_slider_custom"
+        app:tint="@color/purple_700" />
+</androidx.constraintlayout.widget.ConstraintLayout>

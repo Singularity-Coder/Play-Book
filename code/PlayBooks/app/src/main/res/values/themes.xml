@@ -1,0 +1,153 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.PlayBooks" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:navigationBarColor">@color/white</item>
+<!--        <item name="android:statusBarColor">@color/purple_700</item>-->
+<!--        <item name="android:windowLightStatusBar">true</item>-->
+    </style>
+
+    <style name="Theme.PlayBooks" parent="Base.Theme.PlayBooks" />
+
+    <style name="RoundSmall" parent="ShapeAppearance.MaterialComponents.SmallComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">24dp</item>
+    </style>
+
+    <!--    <item name="android:foreground">?android:attr/selectableItemBackground</item>-->
+    <!--    <item name="strokeWidth">1dp</item>-->
+    <!--    <item name="strokeColor">@color/purple_200</item>-->
+    <style name="Widget.App.Button.IconOnly" parent="Widget.MaterialComponents.Button">
+        <item name="iconPadding">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetRight">0dp</item>
+        <item name="cornerRadius">24dp</item>
+        <item name="iconGravity">textStart</item>
+        <item name="elevation">0dp</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="backgroundTint">@color/purple_50</item>
+        <item name="background">@color/purple_500</item>
+        <item name="iconTint">@color/purple_500</item>
+        <item name="rippleColor">@color/purple_200</item>
+    </style>
+
+    <style name="BottomSheetButtonStyle">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:drawablePadding">16dp</item>
+        <item name="android:background">?selectableItemBackground</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:padding">16dp</item>
+        <item name="drawableTint">@color/purple_200</item>
+        <item name="fontFamily">sans-serif</item>
+        <item name="android:textColor">@color/title_color</item>
+    </style>
+
+    <style name="CustomTextAppearanceTab" parent="TextAppearance.Design.Tab">
+        <item name="textAllCaps">false</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <!--https://stackoverflow.com/questions/59248890/imageview-with-only-one-rounded-corner-->
+    <style name="CustomRoundedImageView" parent="">
+        <!--        <item name="cornerFamilyTopLeft">rounded</item>-->
+        <!--        <item name="cornerFamilyTopRight">cut</item>-->
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">0dp</item>
+        <item name="cornerSizeTopRight">10dp</item>
+        <item name="cornerSizeTopLeft">10dp</item>
+        <item name="cornerSizeBottomLeft">10dp</item>
+        <item name="cornerSizeBottomRight">10dp</item>
+    </style>
+
+    <!--https://stackoverflow.com/questions/53768913/how-to-apply-styles-from-styles-xml-to-span-->
+    <style name="url_highlight">
+        <item name="android:textColor">@color/light_gray</item>
+        <item name="android:background">@android:color/transparent</item>
+    </style>
+
+    <style name="RoundedCornerStartSmall" parent="ShapeAppearance.MaterialComponents.SmallComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopLeft">24dp</item>
+        <item name="cornerSizeBottomLeft">24dp</item>
+        <item name="cornerSizeTopRight">0dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+        <item name="android:strokeColor">@color/input_box_stroke_color</item>
+        <item name="boxStrokeColor">@color/input_box_stroke_color</item>
+    </style>
+
+    <style name="RoundedCornerEndSmall" parent="ShapeAppearance.MaterialComponents.SmallComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopLeft">0dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+        <item name="cornerSizeTopRight">24dp</item>
+        <item name="cornerSizeBottomRight">24dp</item>
+        <item name="android:strokeColor">@color/input_box_stroke_color</item>
+        <item name="boxStrokeColor">@color/input_box_stroke_color</item>
+    </style>
+
+    <!--    https://stackoverflow.com/questions/42214592/androidlinespacingmultiplier-doesnt-work-in-androidtextappearance-->
+    <style name="LineSpacing" parent="TextAppearance.Material3.HeadlineSmall">
+        <item name="android:lineSpacingMultiplier">1.8</item>
+    </style>
+
+    <!--    https://stackoverflow.com/questions/12636101/how-to-style-popupmenu-->
+    <!--    https://stackoverflow.com/questions/38667170/meaning-of-format-reference-in-android-attribute-->
+    <!--    https://medium.com/androiddevelopers/android-styling-themes-vs-styles-ebe05f917578-->
+    <!--    https://medium.com/androiddevelopers/android-styling-common-theme-attributes-8f7c50c9eaba-->
+    <!--    <item name="android:popupAnimationStyle"></item>-->
+    <!--    <item name="android:popupEnterTransition" tools:targetApi="n">@transition/explode_transition</item>-->
+    <!--    <item name="android:popupExitTransition" tools:targetApi="n">@transition/explode_transition</item>-->
+    <style name="PopupMenuTheme" parent="Widget.AppCompat.PopupMenu">
+        <item name="attributeName">?attr/popupMenuStyle</item>
+        <item name="android:popupBackground">@drawable/bg_popup_menu_rounded</item>
+    </style>
+
+    <style name="ListPopupWindowTheme" parent="Widget.AppCompat.ListPopupWindow">
+        <item name="attributeName">?attr/listPopupWindowStyle</item>
+        <item name="android:popupBackground">@drawable/bg_popup_menu_rounded</item>
+    </style>
+
+    <style name="CustomCardViewBottomRoundedStyle" parent="@style/Widget.MaterialComponents.CardView">
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay_card_custom_corners_bottom</item>
+    </style>
+
+    <style name="ShapeAppearanceOverlay_card_custom_corners_bottom" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopRight">0dp</item>
+        <item name="cornerSizeTopLeft">0dp</item>
+        <item name="cornerSizeBottomRight">16dp</item>
+        <item name="cornerSizeBottomLeft">16dp</item>
+        <item name="android:padding">0dp</item>
+    </style>
+
+    <!--https://www.howtodoandroid.com/shapeableimageview-material-components-android/-->
+    <style name="ShapeAppearanceOverlay.App.CornerSize10Percent" parent="">
+        <item name="cornerSize">10%</item>
+    </style>
+
+    <style name="CustomCardViewTopRoundedStyle" parent="@style/Widget.MaterialComponents.CardView">
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay_card_custom_corners_top</item>
+    </style>
+
+    <style name="ShapeAppearanceOverlay_card_custom_corners_top" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopRight">16dp</item>
+        <item name="cornerSizeTopLeft">16dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+        <item name="android:padding">0dp</item>
+    </style>
+
+    <!--https://stackoverflow.com/questions/9247792/how-to-make-animation-for-popup-window-in-android/12436853-->
+    <style name="PopupWindowAnimation">
+        <item name="android:windowEnterAnimation">@anim/fade_in</item>
+        <item name="android:windowExitAnimation">@anim/fade_out</item>
+    </style>
+
+    <style name="fab_3_rounded">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+</resources>
