@@ -19,11 +19,18 @@ import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.work.Data
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetBehavior.BottomSheetCallback
 import com.google.android.material.card.MaterialCardView
 import com.singularitycoder.playbooks.databinding.FragmentMainBinding
 import com.singularitycoder.playbooks.helpers.TTS_LANGUAGE_LIST
+import com.singularitycoder.playbooks.helpers.WorkerData
+import com.singularitycoder.playbooks.helpers.WorkerTag
 import com.singularitycoder.playbooks.helpers.checkStoragePermission
 import com.singularitycoder.playbooks.helpers.deviceHeight
 import com.singularitycoder.playbooks.helpers.dpToPx
@@ -41,8 +48,6 @@ import com.singularitycoder.playbooks.helpers.requestStoragePermission
 import com.singularitycoder.playbooks.helpers.runLayoutAnimation
 import com.singularitycoder.playbooks.helpers.setMargins
 import com.singularitycoder.playbooks.helpers.setNavigationBarColor
-import com.singularitycoder.playbooks.helpers.showListPopupMenu2
-import com.singularitycoder.playbooks.helpers.showPopupMenu
 import com.singularitycoder.playbooks.helpers.showPopupMenuWithIcons
 import com.singularitycoder.playbooks.helpers.showSingleSelectionPopupMenu
 import com.singularitycoder.playbooks.helpers.showSnackBar
@@ -60,6 +65,22 @@ import java.util.Locale
 // Before storing text in db, trim all new line characters and unreadable ASCII code
 
 // DB - Book - position of periods, chapters, sentences
+// Use foreground service for player
+// First get files from file man, then in worker convert pdfs to text n insert text to db, from db listen to db inserts and in observer load list in view
+
+/**
+ * https://stackoverflow.com/questions/58425372/android-room-database-size#:~:text=The%20maximum%20size%20of%20a,140%2C000%20gigabytes%20or%20128%2C000%20gibibytes).
+ *
+ * Maximum length of a string or BLOB Default size is 1 GB Max size is 2.147483647
+ * Maximum Number Of Columns Default size is 2000 Max size is 32767
+ * Maximum Length Of An SQL Statement Default size is 1 MB Max size is 1.073741824
+ * Maximum Number Of Tables In A Join Default is 64 tables
+ * Maximum Number Of Attached Databases Default is 10 Max size is 125
+ * Maximum Number Of Rows In A Table Max Size is 18446744073.709552765
+ * Maximum Database Size 140 tb but it will depends on your device disk size.
+ *
+ * https://www.sqlite.org/limits.html
+ * */
 
 /**
  * https://android-developers.googleblog.com/2009/09/introduction-to-text-to-speech-in.html
@@ -90,7 +111,7 @@ class MainFragment : Fragment(), OnInitListener {
     private val pdfList = mutableListOf<String>()
 
     private val downloadsAdapter = DownloadsAdapter()
-    private val downloadsList = mutableListOf<Download>()
+    private val downloadsList = mutableListOf<Book>()
 
     private lateinit var binding: FragmentMainBinding
 
@@ -144,6 +165,16 @@ class MainFragment : Fragment(), OnInitListener {
     override fun onDestroy() {
         super.onDestroy()
         // tts?.shutdown()
+    }
+
+    override fun onInit(p0: Int) {
+        binding.root.showSnackBar("Text-To-Speech engine is ready.")
+        TTS_LANGUAGE_LIST.forEach { locale: Locale ->
+            if (tts?.isLanguageAvailable(locale) == TextToSpeech.LANG_AVAILABLE) {
+                availableLanguages.add(locale)
+            }
+        }
+        tts?.setLanguage(Locale.US)
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -465,7 +496,7 @@ class MainFragment : Fragment(), OnInitListener {
         }
     }
 
-    private fun File.toDownload(): Download? {
+    private fun File.toDownload(): Book? {
         if (this.exists().not()) return null
         val size = if (this.isDirectory) {
             "${getFilesListFrom(this).size} items"
@@ -476,7 +507,7 @@ class MainFragment : Fragment(), OnInitListener {
                 "${this.extension.toUpCase()}  •  ${this.getAppropriateSize()}"
             }
         }
-        return Download(
+        return Book(
             path = this.absolutePath,
             title = this.nameWithoutExtension,
             time = this.lastModified(),
@@ -502,13 +533,27 @@ class MainFragment : Fragment(), OnInitListener {
 //        binding.layoutPersistentBottomSheet.tvSelectLanguage.text = "Language: ${Locale.getDefault().displayName}"
     }
 
-    override fun onInit(p0: Int) {
-        binding.root.showSnackBar("Text-To-Speech engine is ready.")
-        TTS_LANGUAGE_LIST.forEach { locale: Locale ->
-            if (tts?.isLanguageAvailable(locale) == TextToSpeech.LANG_AVAILABLE) {
-                availableLanguages.add(locale)
+    private fun convertPdfToTextInWorker(rssUrl: String?) {
+        val data = Data.Builder().apply {
+            putString(WorkerData.PDF_PATH, rssUrl)
+        }.build()
+        val workRequest = OneTimeWorkRequestBuilder<PdfToTextWorker>()
+            .setInputData(data)
+            .build()
+        WorkManager.getInstance(requireContext()).enqueueUniqueWork(WorkerTag.PDF_TO_TEXT_CONVERTER, ExistingWorkPolicy.KEEP, workRequest)
+        WorkManager.getInstance(requireContext()).getWorkInfoByIdLiveData(workRequest.id).observe(viewLifecycleOwner) { workInfo: WorkInfo? ->
+            when (workInfo?.state) {
+                WorkInfo.State.RUNNING -> println("RUNNING: show Progress")
+                WorkInfo.State.ENQUEUED -> println("ENQUEUED: show Progress")
+                WorkInfo.State.SUCCEEDED -> {
+                    println("SUCCEEDED: stop Progress")
+                    // TODO show manual rss url field
+                }
+                WorkInfo.State.FAILED -> println("FAILED: stop showing Progress")
+                WorkInfo.State.BLOCKED -> println("BLOCKED: show Progress")
+                WorkInfo.State.CANCELLED -> println("CANCELLED: stop showing Progress")
+                else -> Unit
             }
         }
-        tts?.setLanguage(Locale.US)
     }
 }

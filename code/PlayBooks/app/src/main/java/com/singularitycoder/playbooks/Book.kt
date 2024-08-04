@@ -1,12 +1,14 @@
 package com.singularitycoder.playbooks
 
 import android.os.Parcelable
+import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.singularitycoder.playbooks.helpers.Table
 import kotlinx.parcelize.Parcelize
 
-//@Entity(tableName = Table.DOWNLOAD)
+@Entity(tableName = Table.BOOK)
 @Parcelize
-data class Download(
+data class Book(
     @PrimaryKey var id: Long = 0,
     var path: String? = "",
     var title: String = "",

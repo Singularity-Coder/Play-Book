@@ -32,7 +32,7 @@ object Db {
 }
 
 object Table {
-    const val WEB_APP = "table_web_app"
+    const val BOOK = "table_book"
 }
 
 object BroadcastKey {
@@ -48,11 +48,11 @@ object BottomSheetTag {
 }
 
 object WorkerData {
-    const val RSS_URL = "WORKER_DATA_RSS_URL"
+    const val PDF_PATH = "WORKER_DATA_RSS_URL"
 }
 
 object WorkerTag {
-    const val RSS_FOLLOW_PARSER = "RSS_FOLLOW_PARSER"
+    const val PDF_TO_TEXT_CONVERTER = "PDF_TO_TEXT_CONVERTER"
 }
 
 enum class MimeType(val value: String) {
