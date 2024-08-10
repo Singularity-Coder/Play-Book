@@ -17,6 +17,7 @@ import android.graphics.Canvas
 import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.drawable.Drawable
+import android.graphics.pdf.PdfRenderer
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
@@ -839,4 +840,34 @@ fun hasPdfs(): Boolean {
     return getFilesListFrom(folder = getDownloadDirectory()).any { it: File ->
         it.isFile && it.extension().contains(other = "pdf", ignoreCase = true)
     }
+}
+
+// https://developer.android.com/reference/android/graphics/pdf/PdfRenderer
+// https://stackoverflow.com/questions/6715898/what-is-parcelfiledescriptor-in-android
+// https://github.com/robolectric/robolectric/blob/master/robolectric/src/test/java/org/robolectric/shadows/ShadowParcelFileDescriptorTest.java
+fun File.toPdfFirstPageBitmap(): Bitmap? {
+    var bitmap: Bitmap? = null
+    val pfd = ParcelFileDescriptor.open(
+        /* file = */ this,
+        /* mode = */ ParcelFileDescriptor.MODE_READ_WRITE
+    )
+    val renderer = PdfRenderer(pfd) // create a new renderer
+    // render all pages
+    val pageCount = renderer.pageCount
+    for (i in 0 until pageCount) {
+        val page: PdfRenderer.Page = renderer.openPage(i)
+        bitmap = Bitmap.createBitmap(
+            /* width = */ page.width,
+            /* height = */ page.height,
+            /* config = */ Bitmap.Config.ARGB_8888
+        )
+
+        // say we render for showing on the screen
+        page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+        // do stuff with the bitmap
+        page.close()
+        break // quiting loop since we only want first page
+    }
+    renderer.close()
+    return bitmap
 }

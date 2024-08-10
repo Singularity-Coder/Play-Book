@@ -242,7 +242,7 @@ class MainFragment : Fragment(), OnInitListener {
     }
 
     override fun onInit(p0: Int) {
-        binding.root.showSnackBar("Text-To-Speech engine is ready.")
+        print("Text-To-Speech engine is ready.")
         TTS_LANGUAGE_LIST.forEach { locale: Locale ->
             if (tts?.isLanguageAvailable(locale) == TextToSpeech.LANG_AVAILABLE) {
                 availableLanguages.add(locale)

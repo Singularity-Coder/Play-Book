@@ -12,6 +12,8 @@ import com.singularitycoder.playbooks.helpers.deviceHeight
 import com.singularitycoder.playbooks.helpers.deviceWidth
 import com.singularitycoder.playbooks.helpers.onCustomLongClick
 import com.singularitycoder.playbooks.helpers.onSafeClick
+import com.singularitycoder.playbooks.helpers.toPdfFirstPageBitmap
+import java.io.File
 
 class DownloadsAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
@@ -54,7 +56,7 @@ class DownloadsAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
             itemBinding.apply {
                 cardImage.layoutParams.height = deviceHeight() / 6
                 cardImage.layoutParams.width = deviceWidth() / 4
-//                ivItemImage.load(DUMMY_IMAGE_URLS.first())
+                ivItemImage.load(File(book?.path ?: "").toPdfFirstPageBitmap())
                 tvSource.text = "${book?.extension}  •  ${book?.pageCount} pages  •  ${book?.size}"
                 tvTitle.text = book?.title
                 root.onSafeClick {
