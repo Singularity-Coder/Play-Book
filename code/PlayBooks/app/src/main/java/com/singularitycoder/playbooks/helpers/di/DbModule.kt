@@ -3,6 +3,7 @@ package com.singularitycoder.playbooks.helpers.di
 import android.content.Context
 import androidx.room.Room
 import com.singularitycoder.playbooks.BookDao
+import com.singularitycoder.playbooks.BookDataDao
 import com.singularitycoder.playbooks.helpers.Db
 import com.singularitycoder.playbooks.helpers.db.PlayBookDatabase
 import dagger.Module
@@ -24,5 +25,9 @@ object DbModule {
 
     @Singleton
     @Provides
-    fun injectFeedDao(db: PlayBookDatabase): BookDao = db.bookDao()
+    fun injectBookDao(db: PlayBookDatabase): BookDao = db.bookDao()
+
+    @Singleton
+    @Provides
+    fun injectBookDataDao(db: PlayBookDatabase): BookDataDao = db.bookDataDao()
 }

@@ -118,6 +118,7 @@
                     android:layout_marginStart="16dp"
                     android:layout_marginEnd="16dp"
                     app:cardCornerRadius="16dp"
+                    android:backgroundTint="@color/md_indigo_200"
                     app:layout_constraintTop_toTopOf="parent"
                     app:strokeWidth="0dp">
 
@@ -128,7 +129,7 @@
                         android:background="@color/md_indigo_200"
                         android:ellipsize="end"
                         android:fontFamily="sans-serif-light"
-                        android:padding="16dp"
+                        android:layout_margin="16dp"
                         android:text="@string/lorem_ipsum"
                         android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
                         android:textColor="@color/purple_700" />

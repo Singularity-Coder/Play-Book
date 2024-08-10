@@ -13,8 +13,11 @@ interface BookDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(book: Book)
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(list: List<Book>)
+
+    @Query("SELECT EXISTS(SELECT * FROM ${Table.BOOK} WHERE id = :id)")
+    suspend fun isItemPresent(id: String): Boolean
 
 
     @Transaction
@@ -24,10 +27,8 @@ interface BookDao {
 //    @Query("UPDATE ${Table.BOOK} SET link = :link WHERE website LIKE :website")
 //    fun updateLinkWithWebsite(link: String?, website: String)
 
-
-//    @Transaction
-//    @Query("SELECT * FROM ${Table.BOOK} WHERE website LIKE :website LIMIT 1")
-//    suspend fun getItemByWebsite(website: String?): Book
+    @Query("SELECT * FROM ${Table.BOOK} WHERE id LIKE :id LIMIT 1")
+    suspend fun getItemById(id: String): Book
 
     @Query("SELECT * FROM ${Table.BOOK}")
     fun getAllItemsLiveData(): LiveData<List<Book>>

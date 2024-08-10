@@ -1,8 +1,12 @@
 package com.singularitycoder.playbooks
 
+import android.Manifest
 import android.annotation.SuppressLint
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.media.AudioManager
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.speech.tts.TextToSpeech.OnInitListener
@@ -15,51 +19,58 @@ import android.view.ViewGroup
 import android.widget.SeekBar
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.DrawableRes
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
+import coil.load
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetBehavior.BottomSheetCallback
 import com.google.android.material.card.MaterialCardView
+import com.google.android.material.snackbar.BaseTransientBottomBar
+import com.google.android.material.snackbar.Snackbar
 import com.singularitycoder.playbooks.databinding.FragmentMainBinding
 import com.singularitycoder.playbooks.helpers.TTS_LANGUAGE_LIST
 import com.singularitycoder.playbooks.helpers.WorkerData
 import com.singularitycoder.playbooks.helpers.WorkerTag
-import com.singularitycoder.playbooks.helpers.checkStoragePermission
+import com.singularitycoder.playbooks.helpers.collectLatestLifecycleFlow
 import com.singularitycoder.playbooks.helpers.deviceHeight
 import com.singularitycoder.playbooks.helpers.dpToPx
-import com.singularitycoder.playbooks.helpers.extension
-import com.singularitycoder.playbooks.helpers.getAppropriateSize
+import com.singularitycoder.playbooks.helpers.getBookId
 import com.singularitycoder.playbooks.helpers.getDownloadDirectory
-import com.singularitycoder.playbooks.helpers.getFilesListFrom
-import com.singularitycoder.playbooks.helpers.getTextFromPdf
 import com.singularitycoder.playbooks.helpers.globalLayoutAnimation
+import com.singularitycoder.playbooks.helpers.hasNotificationsPermission
+import com.singularitycoder.playbooks.helpers.hasPdfs
+import com.singularitycoder.playbooks.helpers.hasStoragePermission
 import com.singularitycoder.playbooks.helpers.hideKeyboard
 import com.singularitycoder.playbooks.helpers.layoutAnimationController
 import com.singularitycoder.playbooks.helpers.onImeClick
 import com.singularitycoder.playbooks.helpers.onSafeClick
 import com.singularitycoder.playbooks.helpers.requestStoragePermission
-import com.singularitycoder.playbooks.helpers.runLayoutAnimation
 import com.singularitycoder.playbooks.helpers.setMargins
 import com.singularitycoder.playbooks.helpers.setNavigationBarColor
+import com.singularitycoder.playbooks.helpers.shouldShowRationaleFor
+import com.singularitycoder.playbooks.helpers.showAlertDialog
+import com.singularitycoder.playbooks.helpers.showAppSettings
 import com.singularitycoder.playbooks.helpers.showPopupMenuWithIcons
 import com.singularitycoder.playbooks.helpers.showSingleSelectionPopupMenu
 import com.singularitycoder.playbooks.helpers.showSnackBar
-import com.singularitycoder.playbooks.helpers.toUpCase
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.Locale
+
 
 // Run a background worker converting all pdf to text and store books in db
 // Before storing text in db, trim all new line characters and unreadable ASCII code
@@ -67,6 +78,8 @@ import java.util.Locale
 // DB - Book - position of periods, chapters, sentences
 // Use foreground service for player
 // First get files from file man, then in worker convert pdfs to text n insert text to db, from db listen to db inserts and in observer load list in view
+// Show instructions on how to convert ebook formats to pdf online
+
 
 /**
  * https://stackoverflow.com/questions/58425372/android-room-database-size#:~:text=The%20maximum%20size%20of%20a,140%2C000%20gigabytes%20or%20128%2C000%20gibibytes).
@@ -108,10 +121,9 @@ class MainFragment : Fragment(), OnInitListener {
 
     private var topicParam: String? = null
 
-    private val pdfList = mutableListOf<String>()
+    private val booksAdapter = DownloadsAdapter()
 
-    private val downloadsAdapter = DownloadsAdapter()
-    private val downloadsList = mutableListOf<Book>()
+    private var booksList = listOf<Book?>()
 
     private lateinit var binding: FragmentMainBinding
 
@@ -123,7 +135,36 @@ class MainFragment : Fragment(), OnInitListener {
 
     private var selectedTtsLanguage = Locale.getDefault().displayName
 
+    private val bookViewModel by viewModels<BookViewModel>()
+
+//    private var currentBookPosition = 0
+
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<MaterialCardView>
+
+    private var bookLoadingSnackBar: Snackbar? = null
+
+    @SuppressLint("InlinedApi")
+    private val notificationPermissionResult = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean? ->
+        isGranted ?: return@registerForActivityResult
+        if (isGranted.not()) {
+            askNotificationPermission()
+            val accessFineLocationNeedsRationale = activity?.shouldShowRationaleFor(android.Manifest.permission.POST_NOTIFICATIONS) == true
+            if (accessFineLocationNeedsRationale) {
+                requireContext().showAlertDialog(
+                    title = "Grant permission",
+                    message = "You must grant notification permission to play E-Books.",
+                    positiveBtnText = "Settings",
+                    negativeBtnText = "Cancel",
+                    positiveAction = {
+                        activity?.showAppSettings()
+                    }
+                )
+            }
+            return@registerForActivityResult
+        }
+
+        if (booksAdapter.bookList.isEmpty()) loadPdfs()
+    }
 
     private val ttsLauncher = registerForActivityResult<Intent, ActivityResult>(
         ActivityResultContracts.StartActivityForResult()
@@ -177,40 +218,16 @@ class MainFragment : Fragment(), OnInitListener {
         tts?.setLanguage(Locale.US)
     }
 
-    @SuppressLint("NotifyDataSetChanged")
-    private fun loadPdfs() {
-        CoroutineScope(IO).launch {
-            val hasPermission = requireActivity().checkStoragePermission()
-            if (hasPermission) {
-                binding.llStoragePermissionRationaleView.isVisible = false
-                binding.rvDownloads.isVisible = true
-                val filesList = getFilesListFrom(folder = getDownloadDirectory()).toMutableList()
-//          requireActivity().openFile(it)
-                findPdf(filesList)
-            } else {
-                binding.llStoragePermissionRationaleView.isVisible = true
-                binding.rvDownloads.isVisible = false
-            }
-
-            withContext(Main) {
-                downloadsAdapter.downloadsList = downloadsList
-                downloadsAdapter.notifyDataSetChanged()
-                binding.nestedScrollView.scrollTo(0, 0)
-                binding.rvDownloads.runLayoutAnimation(globalLayoutAnimation)
-            }
-        }
-    }
-
     private fun FragmentMainBinding.setupUI() {
         bottomSheetBehavior = BottomSheetBehavior.from(binding.layoutPersistentBottomSheet.root)
-        bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+//        bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
         requireActivity().setNavigationBarColor(R.color.white)
         rvDownloads.apply {
             layoutAnimation = rvDownloads.context.layoutAnimationController(globalLayoutAnimation)
             layoutManager = LinearLayoutManager(context)
-            adapter = downloadsAdapter
+            adapter = booksAdapter
         }
-        ivShield.setMargins(top = (deviceHeight() / 2) - 200.dpToPx().toInt())
+//        ivShield.setMargins(top = (deviceHeight() / 2) - 200.dpToPx().toInt())
         layoutSearch.etSearch.hint = "Search in ${getDownloadDirectory().name}"
         setUpPersistentBottomSheet()
 
@@ -222,27 +239,128 @@ class MainFragment : Fragment(), OnInitListener {
         layoutPersistentBottomSheet.layoutSliderPlayback.tvSliderTitle.text = "Book Progress"
     }
 
-    private fun checkTtsExists() {
-        val intent = Intent().apply {
-            action = TextToSpeech.Engine.ACTION_CHECK_TTS_DATA
-        }
-        ttsLauncher.launch(intent)
-    }
-
     @SuppressLint("NotifyDataSetChanged")
     private fun FragmentMainBinding.setupUserActionListeners() {
         root.setOnClickListener { }
 
-        downloadsAdapter.setOnItemClickListener { download, position ->
-            bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
-            val file = File(download?.path ?: "")
-            val text = file.getTextFromPdf()
-            layoutPersistentBottomSheet.tvCurrentlyReading.text = text
-            tts?.speak(text, TextToSpeech.QUEUE_FLUSH, ttsParams, "")
+        progressCircular.viewTreeObserver.addOnGlobalLayoutListener {
+            if (progressCircular.isVisible.not()) {
+                dismissBookLoadingSnackbar()
+            }
         }
 
-        btnGivePermission.onSafeClick {
-            requireActivity().requestStoragePermission()
+        ivHeaderMore.onSafeClick { view: Pair<View?, Boolean> ->
+            val optionsList = listOf(
+                Pair("Refresh", R.drawable.round_refresh_24),
+                Pair("Delete all books", R.drawable.outline_delete_24)
+            )
+            requireContext().showPopupMenuWithIcons(
+                view = view.first,
+                menuList = optionsList,
+                customColor = R.color.md_red_700,
+                customColorItemText = optionsList.last().first
+            ) { it: MenuItem? ->
+                when (it?.title?.toString()?.trim()) {
+                    optionsList[0].first -> {
+                        loadPdfs()
+                    }
+
+                    optionsList[1].first -> {
+                        requireContext().showAlertDialog(
+                            title = "Delete all books",
+                            message = "Don't worry. The files on your device won't be deleted.",
+                            positiveBtnText = "Delete All",
+                            negativeBtnText = "Cancel",
+                            positiveBtnColor = R.color.md_red_700,
+                            positiveAction = {
+                                stopPlayer()
+                                bookViewModel.deleteAllBookDataItems()
+                                bookViewModel.deleteAllBookItems()
+                                booksAdapter.notifyDataSetChanged()
+                            }
+                        )
+                    }
+                }
+            }
+        }
+
+        booksAdapter.setOnItemClickListener { book, position ->
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                if (activity?.hasNotificationsPermission()?.not() == true) {
+                    askNotificationPermission()
+                    return@setOnItemClickListener
+                }
+            }
+            CoroutineScope(Dispatchers.IO).launch {
+                val bookData = bookViewModel.getBookDataItemById(File(book?.path ?: "").getBookId())
+
+                withContext(Dispatchers.Main) {
+                    bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+                    layoutPersistentBottomSheet.root.isVisible = true
+                    layoutPersistentBottomSheet.tvHeader.text = book?.title
+                    layoutPersistentBottomSheet.tvCurrentlyReading.text = bookData.text
+                    tts?.speak(bookData.text, TextToSpeech.QUEUE_FLUSH, ttsParams, "")
+                    startForegroundService()
+                }
+            }
+        }
+
+        booksAdapter.setOnItemLongClickListener { book, view, position ->
+            val optionsList = listOf(
+                Pair("Open", R.drawable.round_open_in_new_24),
+                Pair("Delete", R.drawable.outline_delete_24)
+            )
+            requireContext().showPopupMenuWithIcons(
+                view = view,
+                menuList = optionsList,
+                customColor = R.color.md_red_700,
+                customColorItemText = optionsList.last().first
+            ) { it: MenuItem? ->
+                when (it?.title?.toString()?.trim()) {
+                    optionsList[1].first -> {
+                        val file = File(book?.path ?: "")
+                        val path = Uri.fromFile(file)
+                        val intent = Intent(Intent.ACTION_VIEW).apply {
+                            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+                            setDataAndType(path, "application/pdf")
+                        }
+                        val chooserIntent = Intent.createChooser(intent, "Open with...").apply {
+                            putExtra(Intent.EXTRA_INITIAL_INTENTS, arrayOf(intent))
+                        }
+                        try {
+                            startActivity(chooserIntent)
+                        } catch (_: ActivityNotFoundException) {
+                        }
+                    }
+
+                    optionsList[1].first -> {
+                        requireContext().showAlertDialog(
+                            title = "Delete Book",
+                            message = "${book?.title} \n\nDon't worry. The file on your device won't be deleted.",
+                            positiveBtnText = "Delete",
+                            negativeBtnText = "Cancel",
+                            positiveBtnColor = R.color.md_red_700,
+                            positiveAction = {
+                                bookViewModel.deleteBookDataItem(book)
+                                bookViewModel.deleteBookItem(book)
+                                booksAdapter.notifyItemRemoved(position ?: 0)
+                            }
+                        )
+                    }
+                }
+            }
+        }
+
+        layoutGrantPermission.btnGivePermission.onSafeClick {
+            when (layoutGrantPermission.tvTitle.text) {
+                getString(R.string.grant_notification_permission) -> {
+                    askNotificationPermission()
+                }
+                getString(R.string.grant_storage_permission) -> {
+                    requireActivity().requestStoragePermission()
+                }
+                else -> Unit
+            }
         }
 
 //        fabSearch.onSafeClick {
@@ -259,12 +377,12 @@ class MainFragment : Fragment(), OnInitListener {
         layoutSearch.etSearch.doAfterTextChanged { query: Editable? ->
             layoutSearch.ibClearSearch.isVisible = query.isNullOrBlank().not()
             if (query.isNullOrBlank()) {
-                downloadsAdapter.downloadsList = downloadsList
-                downloadsAdapter.notifyDataSetChanged()
+                booksAdapter.bookList = booksList
+                booksAdapter.notifyDataSetChanged()
                 return@doAfterTextChanged
             }
-            downloadsAdapter.downloadsList = downloadsList.filter { it.title.contains(other = query, ignoreCase = true) }
-            downloadsAdapter.notifyDataSetChanged()
+            booksAdapter.bookList = booksList.filter { it?.title?.contains(other = query, ignoreCase = true) == true }
+            booksAdapter.notifyDataSetChanged()
         }
 
         bottomSheetBehavior.addBottomSheetCallback(object : BottomSheetCallback() {
@@ -444,6 +562,92 @@ class MainFragment : Fragment(), OnInitListener {
         }
     }
 
+    @SuppressLint("InlinedApi")
+    private fun askNotificationPermission() {
+        notificationPermissionResult.launch(Manifest.permission.POST_NOTIFICATIONS)
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    private fun observeForData() {
+        (activity as? MainActivity)?.collectLatestLifecycleFlow(flow = bookViewModel.getAllBookItemsFlow()) { booksList: List<Book?> ->
+//            pdfList.add(it.absolutePath)
+//          requireActivity().openFile(it)
+            this.booksList = booksList
+            booksAdapter.bookList = booksList
+            booksAdapter.notifyDataSetChanged()
+//            booksAdapter.notifyItemInserted(currentBookPosition)
+//            currentBookPosition++
+//            binding.nestedScrollView.scrollTo(0, 0)
+//            binding.rvDownloads.runLayoutAnimation(globalLayoutAnimation)
+        }
+    }
+
+    private fun startForegroundService() {
+        val intent = Intent()
+        context?.applicationContext?.startForegroundService(intent)
+    }
+
+    private fun stopPlayer() {
+        binding.layoutPersistentBottomSheet.root.isVisible = false
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    private fun loadPdfs() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (activity?.hasNotificationsPermission()?.not() == true) {
+                setPermissionView(
+                    isShow = true,
+                    icon = R.drawable.round_notifications_active_24,
+                    title = getString(R.string.grant_notification_permission),
+                    isShowButton = true
+                )
+                return
+            }
+        }
+
+        if (activity?.hasStoragePermission() == true) {
+            setPermissionView(
+                isShow = hasPdfs().not(),
+                icon = R.drawable.round_menu_book_24,
+                title = "No books found",
+                isShowButton = false
+            )
+            if (hasPdfs().not()) return
+
+            if (booksAdapter.bookList.isEmpty()) {
+                CoroutineScope(Dispatchers.Main).launch {
+                    delay(2000)
+                    bookLoadingSnackBar = Snackbar.make(binding.root, "Books are loading, please wait.", Snackbar.LENGTH_INDEFINITE).apply {
+                        this.animationMode = BaseTransientBottomBar.ANIMATION_MODE_SLIDE
+                        this.anchorView = binding.layoutPersistentBottomSheet.root
+                        setAction("OK") {}
+                        this.show()
+                    }
+//                    binding.root.showSnackBar(
+//                        message = "Books are loading, please wait.",
+//                        anchorView = binding.layoutPersistentBottomSheet.root,
+//                        duration = Snackbar.LENGTH_INDEFINITE,
+//                        isAnimated = false,
+//                        actionBtnText = "OK"
+//                    )
+                }
+            }
+            setPermissionView(isShow = false)
+            binding.rvDownloads.isVisible = true
+            convertPdfToTextInWorker()
+        } else {
+            setPermissionView(isShow = true)
+            binding.rvDownloads.isVisible = false
+        }
+    }
+
+    private fun checkTtsExists() {
+        val intent = Intent().apply {
+            action = TextToSpeech.Engine.ACTION_CHECK_TTS_DATA
+        }
+        ttsLauncher.launch(intent)
+    }
+
     private fun doOnReadingDone() {
         // This is probably not necessary. Add directly to speak
         ttsParams.putString(
@@ -479,45 +683,6 @@ class MainFragment : Fragment(), OnInitListener {
         tts?.addSpeech(wakeUpText, destFile)
     }
 
-    private fun observeForData() {
-    }
-
-    private fun findPdf(filesList: MutableList<File>) {
-        for (it in filesList) {
-            if (it.isFile) {
-                if (it.extension().contains("pdf", true)) {
-                    pdfList.add(it.absolutePath)
-                    downloadsList.add(it.toDownload() ?: continue)
-                }
-            } else {
-//                val innerFilesList = getFilesListFrom(folder = it).toMutableList()
-//                findPdf(innerFilesList)
-            }
-        }
-    }
-
-    private fun File.toDownload(): Book? {
-        if (this.exists().not()) return null
-        val size = if (this.isDirectory) {
-            "${getFilesListFrom(this).size} items"
-        } else {
-            if (this.extension.isBlank()) {
-                this.getAppropriateSize()
-            } else {
-                "${this.extension.toUpCase()}  •  ${this.getAppropriateSize()}"
-            }
-        }
-        return Book(
-            path = this.absolutePath,
-            title = this.nameWithoutExtension,
-            time = this.lastModified(),
-            size = size,
-            link = "",
-            extension = this.extension,
-            isDirectory = this.isDirectory
-        )
-    }
-
     private fun setUpPersistentBottomSheet() {
         binding.layoutPersistentBottomSheet.cardCurrentlyReading.layoutParams.height = deviceHeight() / 3
         binding.layoutPersistentBottomSheet.layoutSliderPlayback.apply {
@@ -533,27 +698,56 @@ class MainFragment : Fragment(), OnInitListener {
 //        binding.layoutPersistentBottomSheet.tvSelectLanguage.text = "Language: ${Locale.getDefault().displayName}"
     }
 
-    private fun convertPdfToTextInWorker(rssUrl: String?) {
+    private fun convertPdfToTextInWorker() {
         val data = Data.Builder().apply {
-            putString(WorkerData.PDF_PATH, rssUrl)
+            putString(WorkerData.PDF_PATH, "")
         }.build()
         val workRequest = OneTimeWorkRequestBuilder<PdfToTextWorker>()
             .setInputData(data)
             .build()
-        WorkManager.getInstance(requireContext()).enqueueUniqueWork(WorkerTag.PDF_TO_TEXT_CONVERTER, ExistingWorkPolicy.KEEP, workRequest)
+        WorkManager.getInstance(requireContext()).enqueueUniqueWork(WorkerTag.PDF_TO_TEXT_CONVERTER, ExistingWorkPolicy.REPLACE, workRequest)
         WorkManager.getInstance(requireContext()).getWorkInfoByIdLiveData(workRequest.id).observe(viewLifecycleOwner) { workInfo: WorkInfo? ->
             when (workInfo?.state) {
-                WorkInfo.State.RUNNING -> println("RUNNING: show Progress")
-                WorkInfo.State.ENQUEUED -> println("ENQUEUED: show Progress")
+                WorkInfo.State.RUNNING -> showProgressBar(true)
+                WorkInfo.State.ENQUEUED -> showProgressBar(true)
                 WorkInfo.State.SUCCEEDED -> {
-                    println("SUCCEEDED: stop Progress")
                     // TODO show manual rss url field
+                    showProgressBar(false)
+                    dismissBookLoadingSnackbar()
                 }
-                WorkInfo.State.FAILED -> println("FAILED: stop showing Progress")
-                WorkInfo.State.BLOCKED -> println("BLOCKED: show Progress")
-                WorkInfo.State.CANCELLED -> println("CANCELLED: stop showing Progress")
+
+                WorkInfo.State.FAILED -> showProgressBar(false)
+                WorkInfo.State.BLOCKED -> showProgressBar(true)
+                WorkInfo.State.CANCELLED -> showProgressBar(false)
                 else -> Unit
             }
+        }
+    }
+
+    private fun dismissBookLoadingSnackbar() {
+        if (bookLoadingSnackBar?.isShownOrQueued == true) {
+            bookLoadingSnackBar?.dismiss()
+        }
+    }
+
+    private fun showProgressBar(isShow: Boolean) {
+        CoroutineScope(Dispatchers.Main).launch {
+            binding.progressCircular.isVisible = isShow
+            binding.ivHeaderMore.isVisible = isShow.not()
+        }
+    }
+
+    private fun setPermissionView(
+        isShow: Boolean,
+        @DrawableRes icon: Int = R.drawable.outline_security_24,
+        title: String = getString(R.string.grant_storage_permission),
+        isShowButton: Boolean = true
+    ) {
+        binding.layoutGrantPermission.apply {
+            root.isVisible = isShow
+            ivIcon.load(icon)
+            tvTitle.text = title
+            btnGivePermission.isVisible = isShowButton
         }
     }
 }

@@ -33,6 +33,7 @@ object Db {
 
 object Table {
     const val BOOK = "table_book"
+    const val BOOK_DATA = "table_book_data"
 }
 
 object BroadcastKey {

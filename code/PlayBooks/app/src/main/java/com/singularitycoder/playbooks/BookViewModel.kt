@@ -9,29 +9,36 @@ import javax.inject.Inject
 @HiltViewModel
 class BookViewModel @Inject constructor(
     private val bookDao: BookDao,
+    private val bookDataDao: BookDataDao,
 ) : ViewModel() {
 
-    fun addToHistory(book: Book) = viewModelScope.launch {
+    fun addBookItem(book: Book) = viewModelScope.launch {
         bookDao.insert(book)
     }
 
-    fun getAllHistoryFlow() = bookDao.getAllItemsStateFlow()
+    fun getAllBookItemsFlow() = bookDao.getAllItemsStateFlow()
 
-    suspend fun getAllHistory() = bookDao.getAll()
+    suspend fun getAllBookItems() = bookDao.getAll()
 
-//    suspend fun getHistoryItemByLink(link: String?) = bookDao.getItemByLink(link)
+    suspend fun getBookItemById(id: String) = bookDao.getItemById(id)
 
-//    suspend fun getLast3HistoryItems() = bookDao.getLast3By()
+    suspend fun getBookDataItemById(id: String) = bookDataDao.getItemById(id)
 
-    fun deleteItem(book: Book?) = viewModelScope.launch {
+//    suspend fun getLast3BookItems() = bookDao.getLast3By()
+
+    fun deleteBookItem(book: Book?) = viewModelScope.launch {
         bookDao.delete(book ?: return@launch)
     }
 
-    fun deleteAllHistory() = viewModelScope.launch {
+    fun deleteBookDataItem(book: Book?) = viewModelScope.launch {
+        bookDataDao.deleteBy(book?.id ?: return@launch)
+    }
+
+    fun deleteAllBookItems() = viewModelScope.launch {
         bookDao.deleteAll()
     }
 
-    fun deleteAllHistoryByTime(elapsedTime: Long?) = viewModelScope.launch {
-        bookDao.deleteAllByTime(elapsedTime)
+    fun deleteAllBookDataItems() = viewModelScope.launch {
+        bookDataDao.deleteAll()
     }
 }

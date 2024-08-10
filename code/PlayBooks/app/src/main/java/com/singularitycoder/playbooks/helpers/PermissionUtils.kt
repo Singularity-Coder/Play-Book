@@ -21,6 +21,7 @@ package com.singularitycoder.playbooks.helpers
 import android.Manifest
 import android.app.Activity
 import android.app.AppOpsManager
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -40,6 +41,17 @@ const val NOT_APPLICABLE = "N/A"
 const val MANAGE_EXTERNAL_STORAGE_PERMISSION_REQUEST = 1
 const val READ_EXTERNAL_STORAGE_PERMISSION_REQUEST = 2
 
+internal fun Context.hasPermission(permission: String): Boolean =
+    ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
+
+internal fun Activity.shouldShowRationaleFor(permission: String): Boolean =
+    ActivityCompat.shouldShowRequestPermissionRationale(this, permission)
+
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+fun Activity.hasNotificationsPermission(): Boolean {
+    return hasPermission(android.Manifest.permission.POST_NOTIFICATIONS)
+}
+
 fun getStoragePermissionName(): String {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
         MANAGE_EXTERNAL_STORAGE_PERMISSION
@@ -52,13 +64,17 @@ fun Activity.openPermissionSettings() {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
         requestStoragePermissionApi30()
     } else {
-        this.startActivity(
-            Intent(
-                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                Uri.fromParts("package", this.packageName, null)
-            )
-        )
+        showAppSettings()
     }
+}
+
+fun Activity.showAppSettings() {
+    this.startActivity(
+        Intent(
+            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+            Uri.fromParts("package", this.packageName, null)
+        )
+    )
 }
 
 fun getLegacyStorageStatus(): String {
@@ -77,7 +93,7 @@ fun Activity.getPermissionStatus(): String {
     }
 }
 
-fun Activity.checkStoragePermission(): Boolean {
+fun Activity.hasStoragePermission(): Boolean {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
         checkStoragePermissionApi30()
     } else {

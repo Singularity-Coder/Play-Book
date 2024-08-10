@@ -296,8 +296,9 @@ fun String?.sanitize(): String {
     var sanitizedString = ""
     val range0to9 = '0'.code..'9'.code
     val rangeLowerCaseAtoZ = 'a'.code..'z'.code
+    val rangeUpperCaseAtoZ = 'A'.code..'Z'.code
     this.forEachIndexed { index: Int, char: Char ->
-        if (char.code !in range0to9 && char.code !in rangeLowerCaseAtoZ) {
+        if (char.code !in range0to9 && char.code !in rangeLowerCaseAtoZ && char.code !in rangeUpperCaseAtoZ) {
             if (sanitizedString.lastOrNull() != '_' && this.lastIndex != index) {
                 sanitizedString += "_"
             }
@@ -819,4 +820,10 @@ fun File.getTextFromPdf(): String? = try {
     parsedText
 } catch (_: Exception) {
     null
+}
+
+fun hasPdfs(): Boolean {
+    return getFilesListFrom(folder = getDownloadDirectory()).any { it: File ->
+        it.isFile && it.extension().contains(other = "pdf", ignoreCase = true)
+    }
 }

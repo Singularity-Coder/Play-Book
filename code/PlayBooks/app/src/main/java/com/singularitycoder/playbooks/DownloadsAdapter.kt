@@ -12,11 +12,10 @@ import com.singularitycoder.playbooks.helpers.deviceHeight
 import com.singularitycoder.playbooks.helpers.deviceWidth
 import com.singularitycoder.playbooks.helpers.onCustomLongClick
 import com.singularitycoder.playbooks.helpers.onSafeClick
-import com.singularitycoder.playbooks.helpers.toLowCase
 
 class DownloadsAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    var downloadsList = emptyList<Book?>()
+    var bookList = emptyList<Book?>()
     private var itemClickListener: (book: Book?, position: Int) -> Unit = { _, _ -> }
     private var itemLongClickListener: (book: Book?, view: View?, position: Int?) -> Unit = { _, _, _ -> }
 
@@ -26,10 +25,10 @@ class DownloadsAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        (holder as ThisViewHolder).setData(downloadsList[position])
+        (holder as ThisViewHolder).setData(bookList[position])
     }
 
-    override fun getItemCount(): Int = downloadsList.size
+    override fun getItemCount(): Int = bookList.size
 
     override fun getItemViewType(position: Int): Int = position
 
@@ -55,14 +54,9 @@ class DownloadsAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
             itemBinding.apply {
                 cardImage.layoutParams.height = deviceHeight() / 6
                 cardImage.layoutParams.width = deviceWidth() / 4
-
                 ivItemImage.load(DUMMY_IMAGE_URLS.first())
-
-                tvSource.text = book?.size
+                tvSource.text = "${book?.extension}  •  ${book?.size}"
                 tvTitle.text = book?.title
-
-                val fileExtension = book?.extension?.toLowCase()?.trim()
-
                 root.onSafeClick {
                     itemClickListener.invoke(book, bindingAdapterPosition)
                 }
