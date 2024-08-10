@@ -13,5 +13,7 @@ data class BookData(
     @PrimaryKey var id: String,
     var path: String? = "",
     var text: String? = "",
-    var pageCount: Int = 0
+    var pageCount: Int = 0,
+    var pagePositionsList: List<Int>,
+    var periodPositionsList: List<Int>
 ) : Parcelable

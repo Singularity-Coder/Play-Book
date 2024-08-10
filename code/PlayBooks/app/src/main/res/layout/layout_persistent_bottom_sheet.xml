@@ -13,6 +13,7 @@
     app:cardElevation="16dp"
     app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
     app:layout_constraintBottom_toBottomOf="parent"
+    app:state_dragged="true"
     app:strokeColor="@color/white"
     app:strokeWidth="0dp">
 
@@ -78,7 +79,7 @@
                     android:layout_height="40dp"
                     android:src="@drawable/round_play_circle_24"
                     android:tint="@color/white"
-                    android:visibility="visible"
+                    android:visibility="gone"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -90,7 +91,7 @@
                     android:layout_height="32dp"
                     android:background="@drawable/shape_rounded_square"
                     android:src="@drawable/baseline_more_horiz_24"
-                    android:visibility="gone"
+                    android:visibility="visible"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -117,8 +118,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
                     android:layout_marginEnd="16dp"
+                    android:backgroundTint="@color/md_indigo_100"
                     app:cardCornerRadius="16dp"
-                    android:backgroundTint="@color/md_indigo_200"
                     app:layout_constraintTop_toTopOf="parent"
                     app:strokeWidth="0dp">
 
@@ -126,33 +127,32 @@
                         android:id="@+id/tv_currently_reading"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:background="@color/md_indigo_200"
+                        android:layout_margin="16dp"
                         android:ellipsize="end"
                         android:fontFamily="sans-serif-light"
-                        android:layout_margin="16dp"
                         android:text="@string/lorem_ipsum"
                         android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
                         android:textColor="@color/purple_700" />
                 </com.google.android.material.card.MaterialCardView>
 
-<!--                <TextView-->
-<!--                    android:id="@+id/tv_select_language"-->
-<!--                    android:layout_width="match_parent"-->
-<!--                    android:layout_height="match_parent"-->
-<!--                    android:layout_marginStart="16dp"-->
-<!--                    android:layout_marginTop="16dp"-->
-<!--                    android:layout_marginEnd="16dp"-->
-<!--                    android:background="@drawable/shape_rounded_square"-->
-<!--                    android:drawableEnd="@drawable/baseline_arrow_drop_down_24"-->
-<!--                    android:drawableTint="@color/purple_700"-->
-<!--                    android:ellipsize="end"-->
-<!--                    android:fontFamily="sans-serif-light"-->
-<!--                    android:padding="16dp"-->
-<!--                    android:text="Select language"-->
-<!--                    android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"-->
-<!--                    android:textColor="@color/purple_700"-->
-<!--                    android:textStyle="bold"-->
-<!--                    app:layout_constraintTop_toBottomOf="@+id/card_currently_reading" />-->
+                <!--                <TextView-->
+                <!--                    android:id="@+id/tv_select_language"-->
+                <!--                    android:layout_width="match_parent"-->
+                <!--                    android:layout_height="match_parent"-->
+                <!--                    android:layout_marginStart="16dp"-->
+                <!--                    android:layout_marginTop="16dp"-->
+                <!--                    android:layout_marginEnd="16dp"-->
+                <!--                    android:background="@drawable/shape_rounded_square"-->
+                <!--                    android:drawableEnd="@drawable/baseline_arrow_drop_down_24"-->
+                <!--                    android:drawableTint="@color/purple_700"-->
+                <!--                    android:ellipsize="end"-->
+                <!--                    android:fontFamily="sans-serif-light"-->
+                <!--                    android:padding="16dp"-->
+                <!--                    android:text="Select language"-->
+                <!--                    android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"-->
+                <!--                    android:textColor="@color/purple_700"-->
+                <!--                    android:textStyle="bold"-->
+                <!--                    app:layout_constraintTop_toBottomOf="@+id/card_currently_reading" />-->
 
                 <include
                     android:id="@+id/layout_slider_pitch"
@@ -181,55 +181,64 @@
 
                 <com.google.android.material.imageview.ShapeableImageView
                     android:id="@+id/iv_play"
-                    android:layout_width="80dp"
-                    android:layout_height="80dp"
-                    android:layout_marginTop="8dp"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:layout_marginTop="16dp"
                     android:layout_marginBottom="32dp"
-                    android:src="@drawable/round_play_circle_24"
-                    android:tint="@color/white"
+                    android:background="@drawable/shape_rounded_square"
+                    android:src="@drawable/round_play_arrow_24"
+                    android:tint="@color/purple_700"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/layout_slider_playback" />
 
-                <com.google.android.material.imageview.ShapeableImageView
+                <androidx.appcompat.widget.AppCompatImageButton
                     android:id="@+id/iv_forward"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
                     android:layout_marginStart="16dp"
+                    android:background="@drawable/shape_rounded_square"
+                    android:backgroundTint="@color/md_indigo_500"
                     android:src="@drawable/round_fast_forward_24"
                     android:tint="@color/white"
                     app:layout_constraintBottom_toBottomOf="@+id/iv_play"
                     app:layout_constraintStart_toEndOf="@+id/iv_play"
                     app:layout_constraintTop_toTopOf="@+id/iv_play" />
 
-                <com.google.android.material.imageview.ShapeableImageView
+                <androidx.appcompat.widget.AppCompatImageButton
                     android:id="@+id/iv_backward"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
                     android:layout_marginEnd="16dp"
+                    android:background="@drawable/shape_rounded_square"
+                    android:backgroundTint="@color/md_indigo_500"
                     android:src="@drawable/round_fast_rewind_24"
                     android:tint="@color/white"
                     app:layout_constraintBottom_toBottomOf="@+id/iv_play"
                     app:layout_constraintEnd_toStartOf="@+id/iv_play"
                     app:layout_constraintTop_toTopOf="@+id/iv_play" />
 
-                <com.google.android.material.imageview.ShapeableImageView
+                <androidx.appcompat.widget.AppCompatImageButton
                     android:id="@+id/iv_next"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
                     android:layout_marginStart="16dp"
+                    android:background="@drawable/shape_rounded_square"
+                    android:backgroundTint="@color/md_indigo_500"
                     android:src="@drawable/round_skip_next_24"
-                    android:tint="@color/white"
                     app:layout_constraintBottom_toBottomOf="@+id/iv_play"
                     app:layout_constraintStart_toEndOf="@+id/iv_forward"
-                    app:layout_constraintTop_toTopOf="@+id/iv_play" />
+                    app:layout_constraintTop_toTopOf="@+id/iv_play"
+                    app:tint="@color/white" />
 
-                <com.google.android.material.imageview.ShapeableImageView
+                <androidx.appcompat.widget.AppCompatImageButton
                     android:id="@+id/iv_previous"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
                     android:layout_marginEnd="16dp"
+                    android:background="@drawable/shape_rounded_square"
+                    android:backgroundTint="@color/md_indigo_500"
                     android:src="@drawable/round_skip_previous_24"
                     android:tint="@color/white"
                     app:layout_constraintBottom_toBottomOf="@+id/iv_play"

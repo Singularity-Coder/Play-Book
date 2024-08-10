@@ -99,13 +99,15 @@ class PdfToTextWorker(val context: Context, workerParams: WorkerParameters) : Co
 
     private fun File.toBookData(): BookData? {
         if (this.exists().not()) return null
-        val pdf = this.getTextFromPdf() // this must be added to new table with foreign key
-        pageCount = pdf.first
+        val pdfBook = this.getTextFromPdf() // this must be added to new table with foreign key
+        pageCount = pdfBook?.pageCount ?: 0
         return BookData(
             id = this.getBookId(),
             path = this.absolutePath,
-            text = pdf.second,
-            pageCount = pdf.first
+            text = pdfBook?.text,
+            pageCount = pdfBook?.pageCount ?: 0,
+            pagePositionsList = pdfBook?.pagePositionsList ?: emptyList(),
+            periodPositionsList = pdfBook?.periodPositionsList ?: emptyList()
         )
     }
 }

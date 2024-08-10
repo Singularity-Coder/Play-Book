@@ -15,7 +15,6 @@ import android.speech.tts.TextToSpeech
 import android.speech.tts.TextToSpeech.OnInitListener
 import android.speech.tts.UtteranceProgressListener
 import android.text.Editable
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
@@ -42,6 +41,7 @@ import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import com.singularitycoder.playbooks.databinding.FragmentMainBinding
 import com.singularitycoder.playbooks.helpers.TTS_LANGUAGE_LIST
+import com.singularitycoder.playbooks.helpers.TtsTag
 import com.singularitycoder.playbooks.helpers.WorkerData
 import com.singularitycoder.playbooks.helpers.WorkerTag
 import com.singularitycoder.playbooks.helpers.collectLatestLifecycleFlow
@@ -146,6 +146,11 @@ class MainFragment : Fragment(), OnInitListener {
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<MaterialCardView>
 
     private var bookLoadingSnackBar: Snackbar? = null
+
+    private var currentPlayingBook: Book? = null
+    private var currentPlayingBookData: BookData? = null
+    private var currentPeriodPosition: Int = 0
+    private var currentPagePosition: Int = 0
 
     private var playBookForegroundService: PlayBookForegroundService? = null
 
@@ -264,7 +269,7 @@ class MainFragment : Fragment(), OnInitListener {
 
         layoutPersistentBottomSheet.layoutSliderPitch.tvSliderTitle.text = "Pitch"
         layoutPersistentBottomSheet.layoutSliderSpeed.tvSliderTitle.text = "Speed"
-        layoutPersistentBottomSheet.layoutSliderPlayback.tvSliderTitle.text = "Book Progress"
+        layoutPersistentBottomSheet.layoutSliderPlayback.tvSliderTitle.text = "Page"
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -321,14 +326,19 @@ class MainFragment : Fragment(), OnInitListener {
             }
             CoroutineScope(Dispatchers.IO).launch {
                 val bookData = bookViewModel.getBookDataItemById(File(book?.path ?: "").getBookId())
+                currentPlayingBook = book
+                currentPlayingBookData = bookData
 
                 withContext(Dispatchers.Main) {
-                    bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+                    layoutPersistentBottomSheet.layoutSliderPlayback.apply {
+                        tvValue.text = "${sliderCustom.progress}/${currentPlayingBook?.pageCount}"
+                    }
                     layoutPersistentBottomSheet.root.isVisible = true
                     layoutPersistentBottomSheet.tvHeader.text = book?.title
                     layoutPersistentBottomSheet.tvCurrentlyReading.text = bookData.text
-                    tts?.speak(bookData.text, TextToSpeech.QUEUE_FLUSH, ttsParams, "")
+                    speak(startIndex = 0, endIndex = bookData.periodPositionsList.firstOrNull() ?: 0)
                     startForegroundService()
+                    bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
                 }
             }
         }
@@ -473,13 +483,13 @@ class MainFragment : Fragment(), OnInitListener {
 
         layoutPersistentBottomSheet.layoutSliderPitch.apply {
             ibReduce.setOnClickListener {
-                tts?.setPitch(0F)
                 sliderCustom.progress -= 1
+                tts?.setPitch(sliderCustom.progress.toFloat())
                 tvValue.text = sliderCustom.progress.toString()
             }
             ibIncrease.setOnClickListener {
-                tts?.setPitch(0F)
                 sliderCustom.progress += 1
+                tts?.setPitch(sliderCustom.progress.toFloat())
                 tvValue.text = sliderCustom.progress.toString()
             }
             sliderCustom.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
@@ -495,13 +505,13 @@ class MainFragment : Fragment(), OnInitListener {
 
         layoutPersistentBottomSheet.layoutSliderSpeed.apply {
             ibReduce.setOnClickListener {
-                tts?.setSpeechRate(0F)
                 sliderCustom.progress -= 1
+                tts?.setSpeechRate(sliderCustom.progress.toFloat())
                 tvValue.text = sliderCustom.progress.toString()
             }
             ibIncrease.setOnClickListener {
-                tts?.setSpeechRate(0F)
                 sliderCustom.progress += 1
+                tts?.setSpeechRate(sliderCustom.progress.toFloat())
                 tvValue.text = sliderCustom.progress.toString()
             }
             sliderCustom.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
@@ -519,7 +529,7 @@ class MainFragment : Fragment(), OnInitListener {
             sliderCustom.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
                     println("seekbar progress: $progress")
-                    tvValue.text = progress.toString()
+                    tvValue.text = "${progress}/${currentPlayingBook?.pageCount}"
                 }
 
                 override fun onStartTrackingTouch(seekBar: SeekBar) = Unit
@@ -528,7 +538,7 @@ class MainFragment : Fragment(), OnInitListener {
         }
 
         layoutPersistentBottomSheet.ivPlay.setOnClickListener {
-            tts?.speak("text to speak", TextToSpeech.QUEUE_FLUSH, ttsParams, "")
+            speak(startIndex = 0, endIndex = currentPlayingBookData?.periodPositionsList?.firstOrNull() ?: 0)
         }
 
         layoutPersistentBottomSheet.ivForward.setOnClickListener {
@@ -564,6 +574,7 @@ class MainFragment : Fragment(), OnInitListener {
             val optionsList = listOf(
                 Pair("Select Language", R.drawable.round_language_24),
                 Pair("Save as audio file", R.drawable.outline_audio_file_24),
+                Pair("Settings", R.drawable.outline_settings_24),
             )
             requireContext().showPopupMenuWithIcons(
                 view = layoutPersistentBottomSheet.ivHeaderMore,
@@ -585,9 +596,22 @@ class MainFragment : Fragment(), OnInitListener {
                     optionsList[1].first -> {
                         saveAsAudioFile()
                     }
+
+                    optionsList[2].first -> {
+
+                    }
                 }
             }
         }
+    }
+
+    private fun speak(startIndex: Int, endIndex: Int) {
+        tts?.speak(
+            /* text = */ currentPlayingBookData?.text?.subSequence(startIndex, endIndex),
+            /* queueMode = */ TextToSpeech.QUEUE_FLUSH,
+            /* params = */ ttsParams,
+            /* utteranceId = */ TtsTag.UID_SPEAK
+        )
     }
 
     @SuppressLint("InlinedApi")

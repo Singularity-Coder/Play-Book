@@ -44,6 +44,10 @@ object FragmentsTag {
     val MAIN: String = MainFragment::class.java.simpleName
 }
 
+object TtsTag {
+    const val UID_SPEAK: String = "UID_SPEAK"
+}
+
 object BottomSheetTag {
     const val TAG_BOOK_READER_FILTERS = "TAG_BOOK_READER_FILTERS_BOTTOM_SHEET"
 }
