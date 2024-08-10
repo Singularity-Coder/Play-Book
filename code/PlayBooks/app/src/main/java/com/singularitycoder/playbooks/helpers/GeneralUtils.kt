@@ -40,6 +40,15 @@ import kotlinx.coroutines.launch
 import java.util.Timer
 import java.util.TimerTask
 
+// https://stackoverflow.com/questions/3160447/how-to-show-up-the-settings-for-text-to-speech-in-my-app
+fun Activity.showTtsSettings() {
+    val intent = Intent().apply {
+        action = "com.android.settings.TTS_SETTINGS"
+        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+    }
+    startActivity(intent)
+}
+
 fun Context.isRecordAudioPermissionGranted(): Boolean {
     return ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
 }

@@ -47,6 +47,7 @@ import com.singularitycoder.playbooks.helpers.WorkerTag
 import com.singularitycoder.playbooks.helpers.collectLatestLifecycleFlow
 import com.singularitycoder.playbooks.helpers.deviceHeight
 import com.singularitycoder.playbooks.helpers.dpToPx
+import com.singularitycoder.playbooks.helpers.drawable
 import com.singularitycoder.playbooks.helpers.getBookId
 import com.singularitycoder.playbooks.helpers.getDownloadDirectory
 import com.singularitycoder.playbooks.helpers.globalLayoutAnimation
@@ -65,7 +66,7 @@ import com.singularitycoder.playbooks.helpers.showAlertDialog
 import com.singularitycoder.playbooks.helpers.showAppSettings
 import com.singularitycoder.playbooks.helpers.showPopupMenuWithIcons
 import com.singularitycoder.playbooks.helpers.showSingleSelectionPopupMenu
-import com.singularitycoder.playbooks.helpers.showSnackBar
+import com.singularitycoder.playbooks.helpers.showTtsSettings
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -249,6 +250,22 @@ class MainFragment : Fragment(), OnInitListener {
             }
         }
         tts?.setLanguage(Locale.US)
+
+        // setOnUtteranceProgressListener must be set after tts is init
+        // https://stackoverflow.com/questions/52233235/setonutteranceprogresslistener-not-at-all-working-for-text-to-speech-for-api-2
+        tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+            override fun onStart(uttId: String?) = Unit
+
+            override fun onDone(uttId: String?) {
+                binding.layoutPersistentBottomSheet.ivPlay.setImageDrawable(context?.drawable(R.drawable.round_play_arrow_24))
+                binding.layoutPersistentBottomSheet.ivHeaderPlay.setImageDrawable(context?.drawable(R.drawable.round_play_arrow_24))
+                if (uttId == TtsTag.UID_SPEAK) {
+                    // do something
+                }
+            }
+
+            override fun onError(uttId: String?) = Unit
+        })
     }
 
     private fun FragmentMainBinding.setupUI() {
@@ -331,6 +348,7 @@ class MainFragment : Fragment(), OnInitListener {
 
                 withContext(Dispatchers.Main) {
                     layoutPersistentBottomSheet.layoutSliderPlayback.apply {
+                        sliderCustom.max = currentPlayingBook?.pageCount ?: 0
                         tvValue.text = "${sliderCustom.progress}/${currentPlayingBook?.pageCount}"
                     }
                     layoutPersistentBottomSheet.root.isVisible = true
@@ -394,9 +412,11 @@ class MainFragment : Fragment(), OnInitListener {
                 getString(R.string.grant_notification_permission) -> {
                     askNotificationPermission()
                 }
+
                 getString(R.string.grant_storage_permission) -> {
                     requireActivity().requestStoragePermission()
                 }
+
                 else -> Unit
             }
         }
@@ -538,7 +558,17 @@ class MainFragment : Fragment(), OnInitListener {
         }
 
         layoutPersistentBottomSheet.ivPlay.setOnClickListener {
-            speak(startIndex = 0, endIndex = currentPlayingBookData?.periodPositionsList?.firstOrNull() ?: 0)
+            if (tts?.isSpeaking == true) {
+                tts?.stop()
+            } else {
+                speak(startIndex = 0, endIndex = currentPlayingBookData?.periodPositionsList?.firstOrNull() ?: 0)
+            }
+
+            setPlaybackViewState()
+        }
+
+        layoutPersistentBottomSheet.ivHeaderPlay.setOnClickListener {
+            layoutPersistentBottomSheet.ivPlay.performClick()
         }
 
         layoutPersistentBottomSheet.ivForward.setOnClickListener {
@@ -556,18 +586,6 @@ class MainFragment : Fragment(), OnInitListener {
         layoutPersistentBottomSheet.ivPrevious.setOnClickListener {
             tts?.speak("text to speak", TextToSpeech.QUEUE_FLUSH, ttsParams, "")
         }
-
-        tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-            override fun onStart(uttId: String?) = Unit
-
-            override fun onDone(uttId: String?) {
-                if (uttId == "end of wakeup message ID") {
-                    // do something
-                }
-            }
-
-            override fun onError(uttId: String?) = Unit
-        })
 
         val ttsLanguageList = TTS_LANGUAGE_LIST.map { Pair(it.displayName, R.drawable.round_check_24) }
         layoutPersistentBottomSheet.ivHeaderMore.setOnClickListener { view: View? ->
@@ -598,10 +616,20 @@ class MainFragment : Fragment(), OnInitListener {
                     }
 
                     optionsList[2].first -> {
-
+                        activity?.showTtsSettings()
                     }
                 }
             }
+        }
+    }
+
+    private fun FragmentMainBinding.setPlaybackViewState() {
+        if (tts?.isSpeaking == true) {
+            layoutPersistentBottomSheet.ivPlay.setImageDrawable(context?.drawable(R.drawable.round_play_arrow_24))
+            layoutPersistentBottomSheet.ivHeaderPlay.setImageDrawable(context?.drawable(R.drawable.round_play_arrow_24))
+        } else {
+            layoutPersistentBottomSheet.ivPlay.setImageDrawable(context?.drawable(R.drawable.round_pause_24))
+            layoutPersistentBottomSheet.ivHeaderPlay.setImageDrawable(context?.drawable(R.drawable.round_pause_24))
         }
     }
 
