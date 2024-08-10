@@ -23,6 +23,8 @@ import java.io.File
 
 class PdfToTextWorker(val context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams) {
 
+    private var pageCount = 0
+
     @EntryPoint
     @InstallIn(SingletonComponent::class)
     interface ThisEntryPoint {
@@ -91,16 +93,19 @@ class PdfToTextWorker(val context: Context, workerParams: WorkerParameters) : Co
             link = "",
             extension = this.extension.toUpCase(),
             isDirectory = this.isDirectory,
+            pageCount = pageCount
         )
     }
 
     private fun File.toBookData(): BookData? {
         if (this.exists().not()) return null
-        val text = this.getTextFromPdf() // this must be added to new table with foreign key
+        val pdf = this.getTextFromPdf() // this must be added to new table with foreign key
+        pageCount = pdf.first
         return BookData(
             id = this.getBookId(),
             path = this.absolutePath,
-            text = text
+            text = pdf.second,
+            pageCount = pdf.first
         )
     }
 }

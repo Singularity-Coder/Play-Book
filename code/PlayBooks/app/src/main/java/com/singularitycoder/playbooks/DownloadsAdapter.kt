@@ -54,8 +54,8 @@ class DownloadsAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
             itemBinding.apply {
                 cardImage.layoutParams.height = deviceHeight() / 6
                 cardImage.layoutParams.width = deviceWidth() / 4
-                ivItemImage.load(DUMMY_IMAGE_URLS.first())
-                tvSource.text = "${book?.extension}  •  ${book?.size}"
+//                ivItemImage.load(DUMMY_IMAGE_URLS.first())
+                tvSource.text = "${book?.extension}  •  ${book?.pageCount} pages  •  ${book?.size}"
                 tvTitle.text = book?.title
                 root.onSafeClick {
                     itemClickListener.invoke(book, bindingAdapterPosition)

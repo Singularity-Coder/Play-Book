@@ -12,6 +12,7 @@ import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.PermissionChecker
+import com.singularitycoder.playbooks.helpers.NotificationsHelper
 import kotlinx.coroutines.cancelChildren
 import kotlin.time.Duration.Companion.seconds
 
@@ -19,11 +20,11 @@ import kotlin.time.Duration.Companion.seconds
  * https://developer.android.com/develop/background-work/services/foreground-services
  * https://developer.android.com/about/versions/14/changes/fgs-types-required#media
  * https://github.com/landomen/ForegroundService14Sample
+ * https://medium.com/@sarafanshul/jni-101-introduction-to-java-native-interface-8a1256ca4d8e
+ * https://github.com/szelinskip/MusicPlayer
  *
  * Grant Notification permission
- *
  * If you want the notification non-dismissable by the user, pass true into the setOngoing() method when you create your notification using Notification.Builder.
- *
  * */
 
 class PlayBookForegroundService : Service() {
@@ -84,22 +85,17 @@ class PlayBookForegroundService : Service() {
 
         try {
             // Create the notification to display while the service is running
-            val notification = NotificationCompat.Builder(this, "CHANNEL_ID").build()
+//            val notification = NotificationCompat.Builder(this, "CHANNEL_ID").build()
+            NotificationsHelper.createNotificationChannel(this)
+
             ServiceCompat.startForeground(
                 /* service = */ this,
-                /* id = */ 100, // Cannot be 0
-                /* notification = */ notification,
-                /* foregroundServiceType = */
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
-                } else {
-                    0
-                },
+                /* id = */ 1, // Cannot be 0
+                /* notification = */ NotificationsHelper.buildNotification(this),
+                /* foregroundServiceType = */ ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK,
             )
         } catch (e: Exception) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-                e is ForegroundServiceStartNotAllowedException
-            ) {
+            if (e is ForegroundServiceStartNotAllowedException) {
                 // App not in a valid state to start foreground service
                 // (e.g. started from bg)
             }

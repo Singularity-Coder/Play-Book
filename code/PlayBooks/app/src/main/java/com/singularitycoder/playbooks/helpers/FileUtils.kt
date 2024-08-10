@@ -809,7 +809,7 @@ fun File.getText(
 }
 
 // https://stackoverflow.com/questions/58750885/how-can-i-convert-pdf-file-to-text
-fun File.getTextFromPdf(): String? = try {
+fun File.getTextFromPdf(): Pair<Int, String?> = try {
     var parsedText = ""
     val reader = PdfReader(this.absolutePath)
     for (i in 0 until reader.numberOfPages) {
@@ -817,9 +817,9 @@ fun File.getTextFromPdf(): String? = try {
         parsedText = "$parsedText${PdfTextExtractor.getTextFromPage(reader, i + 1).trim { it <= ' ' }}\n\n\n\n"
     }
     reader.close()
-    parsedText
+    Pair(reader.numberOfPages, parsedText)
 } catch (_: Exception) {
-    null
+    Pair(0, null)
 }
 
 fun hasPdfs(): Boolean {

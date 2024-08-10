@@ -17,5 +17,6 @@ data class Book(
     var size: String? = "",
     var link: String? = "",
     var extension: String? = "",
-    var isDirectory: Boolean = false
+    var isDirectory: Boolean = false,
+    var pageCount: Int = 0
 ) : Parcelable

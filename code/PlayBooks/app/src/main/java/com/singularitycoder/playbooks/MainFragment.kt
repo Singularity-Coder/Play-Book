@@ -3,15 +3,19 @@ package com.singularitycoder.playbooks
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.ActivityNotFoundException
+import android.content.ComponentName
 import android.content.Intent
+import android.content.ServiceConnection
 import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.IBinder
 import android.speech.tts.TextToSpeech
 import android.speech.tts.TextToSpeech.OnInitListener
 import android.speech.tts.UtteranceProgressListener
 import android.text.Editable
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
@@ -143,6 +147,29 @@ class MainFragment : Fragment(), OnInitListener {
 
     private var bookLoadingSnackBar: Snackbar? = null
 
+    private var playBookForegroundService: PlayBookForegroundService? = null
+
+    private var serviceBoundState = false
+
+    // needed to communicate with the service.
+    private val connection = object : ServiceConnection {
+        override fun onServiceConnected(className: ComponentName, service: IBinder) {
+            // we've bound to ExampleLocationForegroundService, cast the IBinder and get ExampleLocationForegroundService instance.
+            print("onServiceConnected")
+            val binder = service as PlayBookForegroundService.LocalBinder
+            playBookForegroundService = binder.getService()
+            serviceBoundState = true
+//            onServiceConnected()
+        }
+
+        override fun onServiceDisconnected(arg0: ComponentName) {
+            // This is called when the connection with the service has been disconnected. Clean up.
+            print("onServiceDisconnected")
+            serviceBoundState = false
+            playBookForegroundService = null
+        }
+    }
+
     @SuppressLint("InlinedApi")
     private val notificationPermissionResult = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean? ->
         isGranted ?: return@registerForActivityResult
@@ -206,6 +233,7 @@ class MainFragment : Fragment(), OnInitListener {
     override fun onDestroy() {
         super.onDestroy()
         // tts?.shutdown()
+        activity?.unbindService(connection)
     }
 
     override fun onInit(p0: Int) {
@@ -583,8 +611,14 @@ class MainFragment : Fragment(), OnInitListener {
     }
 
     private fun startForegroundService() {
-        val intent = Intent()
+        val intent = Intent(context, PlayBookForegroundService::class.java)
         context?.applicationContext?.startForegroundService(intent)
+        // bind to the service to update UI
+        activity?.bindService(intent, connection, 0)
+    }
+
+    private fun stopForegroundService() {
+        playBookForegroundService?.stopForegroundService()
     }
 
     private fun stopPlayer() {

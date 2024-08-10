@@ -12,5 +12,6 @@ import kotlinx.parcelize.Parcelize
 data class BookData(
     @PrimaryKey var id: String,
     var path: String? = "",
-    var text: String? = ""
+    var text: String? = "",
+    var pageCount: Int = 0
 ) : Parcelable
