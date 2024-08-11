@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="4dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tv_notification_track_title"
+            style="@style/TextAppearance.Compat.Notification"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_marginTop="2dp"
+            android:layout_marginEnd="6dp"
+            android:maxLines="1"
+            android:text="@string/default_title"
+            android:textColor="@color/black"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/tv_notification_track_author"
+            style="@style/TextAppearance.Compat.Notification"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="6dp"
+            android:maxLines="1"
+            android:text="@string/default_author"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/ib_notification_rewind"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/baseline_fast_rewind_24"
+            android:contentDescription="@string/notification_rewind_button_descr" />
+
+        <ImageButton
+            android:id="@+id/ib_notification_play_pause"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/baseline_play_circle_24"
+            android:contentDescription="@string/notification_play_pause_button_descr" />
+
+        <ImageButton
+            android:id="@+id/ib_notification_forward"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/baseline_fast_forward_24"
+            android:contentDescription="@string/notification_forward_button_descr" />
+
+        <ImageButton
+            android:id="@+id/ib_notification_close"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:drawable/ic_menu_close_clear_cancel"
+            android:contentDescription="@string/notification_close_button_descr" />
+    </LinearLayout>
+
+</LinearLayout>

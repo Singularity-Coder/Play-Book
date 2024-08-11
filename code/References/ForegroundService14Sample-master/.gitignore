@@ -1,8 +1,7 @@
 *.iml
+.gradle
 /local.properties
-/.gradle
 /.idea
-/code/PlayBooks/.idea/
 .DS_Store
 /build
 /captures

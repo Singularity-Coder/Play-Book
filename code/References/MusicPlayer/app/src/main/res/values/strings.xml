@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">MusicPlayer</string>
+
+    <string name="track_playback_error">There was a problem with this track playback</string>
+    <string name="default_title">Nothing is being played</string>
+    <string name="default_time">00:00</string>
+    <string name="rewind_button_descr">Rewind 10 seconds</string>
+    <string name="playe_pause_button_descr">Play pause</string>
+    <string name="forward_button_descr">Forward 10 seconds</string>
+    <string name="notification_rewind_button_descr">Notification button rewind 10 seconds</string>
+    <string name="notification_play_pause_button_descr">Notification play pause button</string>
+    <string name="notification_forward_button_descr">Notification button forward 10 seconds</string>
+    <string name="notification_close_button_descr">Closes music player</string>
+    <string name="default_author">No author</string>
+    <string name="activity_main_menu_about_author">About author</string>
+    <string name="activity_main_menu_settings">Settings</string>
+    <string name="about_author_text">Favourite course :)\nRecently lost a lot of time, cause was\nasked to implement strange service.\nSo, don’t read first letter of each line.</string>
+    <string name="about_author_under_picture">Typed \"random image\" in google</string>
+    <string name="about_author_activity_label">About author</string>
+    <string name="settings_activity_label">Settings</string>
+    <string name="shuffle_play_text">Shuffle play</string>
+    <string name="auto_play_next_text">Auto play next track</string>
+</resources>
