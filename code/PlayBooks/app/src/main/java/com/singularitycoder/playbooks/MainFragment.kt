@@ -376,7 +376,10 @@ class MainFragment : Fragment(), OnInitListener {
                     }
                     layoutPersistentBottomSheet.root.isVisible = true
                     layoutPersistentBottomSheet.tvHeader.text = book?.title
-                    layoutPersistentBottomSheet.tvCurrentlyReading.text = bookData.text
+                    layoutPersistentBottomSheet.tvCurrentlyReading.text = bookData.text?.subSequence(
+                        startIndex = 0,
+                        endIndex = bookData.periodPositionsList.firstOrNull() ?: 0
+                    )
                     speak(startIndex = 0, endIndex = bookData.periodPositionsList.firstOrNull() ?: 0)
                     startForegroundService(book?.id ?: "")
                     playBookForegroundService?.playPause(isPlay = true)
@@ -397,7 +400,7 @@ class MainFragment : Fragment(), OnInitListener {
                 customColorItemText = optionsList.last().first
             ) { it: MenuItem? ->
                 when (it?.title?.toString()?.trim()) {
-                    optionsList[1].first -> {
+                    optionsList[0].first -> {
                         val file = File(book?.path ?: "")
                         val path = Uri.fromFile(file)
                         val intent = Intent(Intent.ACTION_VIEW).apply {

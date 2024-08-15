@@ -44,7 +44,6 @@ class PlayBookForegroundService : Service(), OnInitListener {
         private val TAG = this::class.java.simpleName
     }
 
-
     @EntryPoint
     @InstallIn(SingletonComponent::class)
     interface ThisEntryPoint {
@@ -115,25 +114,11 @@ class PlayBookForegroundService : Service(), OnInitListener {
         }
     }
 
-    /** Return the communication channel to the service. */
-    override fun onBind(intent: Intent): IBinder {
-        Log.d(TAG, "onBind")
-        return binder
-    }
-
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(TAG, "onStartCommand")
-        bookId = intent?.getStringExtra(IntentExtraKey.BOOK_ID)
-        startAsForegroundService()
-        // init TTS
-        return super.onStartCommand(intent, flags, startId)
-    }
-
     /** Foreground Service created */
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     override fun onCreate() {
         super.onCreate()
-        Log.d(TAG, "onCreate")
+        Log.d(TAG, "onCreate - First")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(
                 /* receiver = */ notificationButtonClickReceiver,
@@ -153,11 +138,28 @@ class PlayBookForegroundService : Service(), OnInitListener {
         val dbEntryPoint = EntryPointAccessors.fromApplication(appContext, com.singularitycoder.playbooks.PdfToTextWorker.ThisEntryPoint::class.java)
         bookDao = dbEntryPoint.db().bookDao()
         bookDataDao = dbEntryPoint.db().bookDataDao()
+        // play book
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Log.d(TAG, "onStartCommand - Second")
+        bookId = intent?.getStringExtra(IntentExtraKey.BOOK_ID)
         CoroutineScope(Dispatchers.IO).launch {
             currentBook = bookDao?.getItemById(bookId ?: "")
             currentBookData = bookDataDao?.getItemById(bookId ?: "")
+
+            withContext(Dispatchers.Main) {
+                startAsForegroundService()
+            }
         }
-        // play book
+        // init TTS
+        return super.onStartCommand(intent, flags, startId)
+    }
+
+    /** Return the communication channel to the service. */
+    override fun onBind(intent: Intent): IBinder {
+        Log.d(TAG, "onBind - third")
+        return binder
     }
 
     /** Foreground Service destroyed */

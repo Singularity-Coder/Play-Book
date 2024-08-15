@@ -7,6 +7,12 @@ EDGE CASES:--------------------------------------------------
 
 FEATURES:--------------------------------------------------
 
+1. Notification - clicks -> pending intent to foregroudn service -> intent to main frag to update player
+2. Player - clicks -> send to foreground service -> update notification
+3. Pdf preview images must be stored in internal files during book creation to avoid generating bitmaps on the fly in recycler adapter
+4. Send only the currently playing sentence to player screen for display
+5. Highlight spoken word in the sentence in player
+
 Run a background worker converting all pdf to text and store books in db
 Before storing text in db, trim all new line characters and unreadable ASCII code
 
