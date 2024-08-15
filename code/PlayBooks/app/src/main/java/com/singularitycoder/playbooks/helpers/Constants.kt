@@ -3,7 +3,6 @@ package com.singularitycoder.playbooks.helpers
 import com.facebook.shimmer.BuildConfig
 import com.singularitycoder.playbooks.MainFragment
 import com.singularitycoder.playbooks.R
-import java.util.Locale
 
 const val FILE_PROVIDER = "${BuildConfig.APPLICATION_ID}.fileprovider"
 
@@ -23,12 +22,36 @@ object FragmentResultBundleKey {
     const val RENAME_DOWNLOAD_FILE = "RENAME_DOWNLOAD_FILE"
 }
 
+enum class NotificationAction {
+    PREVIOUS_SENTENCE,
+    NEXT_SENTENCE,
+    PLAY_PAUSE,
+    PREVIOUS_PAGE,
+    NEXT_PAGE
+}
+
 object IntentKey {
-    const val LOCATION_TOGGLE_STATUS = "LOCATION_TOGGLE_STATUS"
+    const val NOTIFICATION_BUTTON_CLICK_BROADCAST = "NOTIFICATION_BUTTON_CLICK_BROADCAST"
+    const val MAIN_BROADCAST = "MAIN_BROADCAST"
+}
+
+object IntentExtraKey {
+    const val MESSAGE = "MESSAGE"
+    const val NOTIFICATION_BUTTON_CLICK_TYPE = "NOTIFICATION_BUTTON_CLICK_TYPE"
+    const val BOOK_ID = "BOOK_ID"
+}
+
+object IntentExtraValue {
+    const val UNBIND = "UNBIND"
+    const val UPDATE_PROGRESS = "UPDATE_PROGRESS"
+    const val READING_COMPLETE = "READING_COMPLETE"
+    const val TTS_READY = "TTS_READY"
+    const val SERVICE_DESTROYED = "SERVICE_DESTROYED"
+    const val TTS_PAUSED = "TTS_PAUSED"
 }
 
 object Db {
-    const val CONNECT_ME = "db_connect_me"
+    const val PLAY_BOOKS = "db_play_books"
 }
 
 object Table {
@@ -67,46 +90,3 @@ enum class MimeType(val value: String) {
     ANY(value = "*/*"),
     FONT(value = "application/x-font-ttf")
 }
-
-val ebookReaderFormats = listOf(
-    "pdf",
-    "epub",
-    "epub3",
-    "mobi",
-    "djvu",
-    "fb2",
-    "txt",
-    "rtf",
-    "azw",
-    "azw3",
-    "html",
-    "cbz",
-    "cbr",
-    "doc",
-    "docx",
-    "opds"
-)
-
-val TTS_LANGUAGE_LIST = listOf(
-    Locale.CANADA,
-    Locale.CANADA_FRENCH,
-    Locale.CHINA,
-//    Locale.CHINESE,
-//    Locale.ENGLISH,
-    Locale.FRANCE,
-//    Locale.FRENCH,
-//    Locale.GERMAN,
-    Locale.GERMANY,
-//    Locale.ITALIAN,
-    Locale.ITALY,
-    Locale.JAPAN,
-//    Locale.JAPANESE,
-    Locale.KOREA,
-//    Locale.KOREAN,
-//    Locale.PRC,
-//    Locale.SIMPLIFIED_CHINESE,
-    Locale.TAIWAN,
-//    Locale.TRADITIONAL_CHINESE,
-    Locale.UK,
-    Locale.US
-).sortedBy { it.displayName }

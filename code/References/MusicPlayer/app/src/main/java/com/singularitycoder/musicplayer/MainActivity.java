@@ -34,7 +34,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.singularitycoder.musicplayer.utils.StringTrackUtils;
 import com.singularitycoder.musicplayer.utils.TimeConverterUtils;
 import com.singularitycoder.musicplayer.viewmodel.MusicPlayerViewModel;
-import com.singularitycoder.musicplayer.viewmodel.MusicPlayerViewModelFactory;
 
 import java.util.List;
 
@@ -215,7 +214,7 @@ public class MainActivity extends AppCompatActivity implements TrackListAdapter.
         LocalBroadcastManager.getInstance(this).registerReceiver(messageReceiver, new IntentFilter(Constants.ACTIVITY_BROADCAST_INTENT_KEY));
     }
 
-    private void setService() {
+    private void startForegroundService() {
         if (musicService == null) {
             Intent startMusicService = new Intent(this, MusicForegroundService.class);
             if (MusicForegroundService.musicForegroundService == null)
@@ -226,7 +225,7 @@ public class MainActivity extends AppCompatActivity implements TrackListAdapter.
 
     @Override
     public void onTrackButtonClick(ImageButton ibView, Track track) {
-        setService();
+        startForegroundService();
         if (track.equals(currentTrack)) {
             currentTrackIBView = ibView;
             playPauseButtonsClickAux();
@@ -375,7 +374,7 @@ public class MainActivity extends AppCompatActivity implements TrackListAdapter.
         super.onResume();
         initSettings();
         if (musicService == null)
-            setService();
+            startForegroundService();
         else
             restoreTrackInfo();
         initCurrentTrack();

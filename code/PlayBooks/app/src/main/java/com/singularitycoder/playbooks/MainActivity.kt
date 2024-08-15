@@ -1,5 +1,6 @@
 package com.singularitycoder.playbooks
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.WindowInsetsController
 import android.view.WindowManager
@@ -10,9 +11,11 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.singularitycoder.playbooks.databinding.ActivityMainBinding
 import com.singularitycoder.playbooks.helpers.FragmentsTag
+import com.singularitycoder.playbooks.helpers.IntentExtraKey
+import com.singularitycoder.playbooks.helpers.NotificationAction
 import com.singularitycoder.playbooks.helpers.showScreen
+import com.singularitycoder.playbooks.helpers.showToast
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -41,6 +44,32 @@ class MainActivity : AppCompatActivity() {
             isAdd = true,
             isAddToBackStack = false
         )
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        val action = intent.getStringExtra(IntentExtraKey.NOTIFICATION_BUTTON_CLICK_TYPE)
+        when (action) {
+            NotificationAction.PLAY_PAUSE.name -> {
+                showToast("PLAY_PAUSE")
+            }
+
+            NotificationAction.PREVIOUS_SENTENCE.name -> {
+                showToast("PREVIOUS_SENTENCE")
+            }
+
+            NotificationAction.NEXT_SENTENCE.name -> {
+                showToast("NEXT_SENTENCE")
+            }
+
+            NotificationAction.PREVIOUS_PAGE.name -> {
+                showToast("PREVIOUS_PAGE")
+            }
+
+            NotificationAction.NEXT_PAGE.name -> {
+                showToast("NEXT_PAGE")
+            }
+        }
     }
 
     override fun onDestroy() {

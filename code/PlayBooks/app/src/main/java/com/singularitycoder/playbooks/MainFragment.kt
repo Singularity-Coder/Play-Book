@@ -3,8 +3,11 @@ package com.singularitycoder.playbooks
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.ActivityNotFoundException
+import android.content.BroadcastReceiver
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.ServiceConnection
 import android.media.AudioManager
 import android.net.Uri
@@ -15,6 +18,7 @@ import android.speech.tts.TextToSpeech
 import android.speech.tts.TextToSpeech.OnInitListener
 import android.speech.tts.UtteranceProgressListener
 import android.text.Editable
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
@@ -27,6 +31,7 @@ import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
@@ -40,7 +45,9 @@ import com.google.android.material.card.MaterialCardView
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import com.singularitycoder.playbooks.databinding.FragmentMainBinding
-import com.singularitycoder.playbooks.helpers.TTS_LANGUAGE_LIST
+import com.singularitycoder.playbooks.helpers.IntentExtraKey
+import com.singularitycoder.playbooks.helpers.IntentExtraValue
+import com.singularitycoder.playbooks.helpers.IntentKey
 import com.singularitycoder.playbooks.helpers.TtsTag
 import com.singularitycoder.playbooks.helpers.WorkerData
 import com.singularitycoder.playbooks.helpers.WorkerTag
@@ -76,46 +83,14 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.Locale
 
-
-// Run a background worker converting all pdf to text and store books in db
-// Before storing text in db, trim all new line characters and unreadable ASCII code
-
-// DB - Book - position of periods, chapters, sentences
-// Use foreground service for player
-// First get files from file man, then in worker convert pdfs to text n insert text to db, from db listen to db inserts and in observer load list in view
-// Show instructions on how to convert ebook formats to pdf online
-
-
-/**
- * https://stackoverflow.com/questions/58425372/android-room-database-size#:~:text=The%20maximum%20size%20of%20a,140%2C000%20gigabytes%20or%20128%2C000%20gibibytes).
- *
- * Maximum length of a string or BLOB Default size is 1 GB Max size is 2.147483647
- * Maximum Number Of Columns Default size is 2000 Max size is 32767
- * Maximum Length Of An SQL Statement Default size is 1 MB Max size is 1.073741824
- * Maximum Number Of Tables In A Join Default is 64 tables
- * Maximum Number Of Attached Databases Default is 10 Max size is 125
- * Maximum Number Of Rows In A Table Max Size is 18446744073.709552765
- * Maximum Database Size 140 tb but it will depends on your device disk size.
- *
- * https://www.sqlite.org/limits.html
- * */
-
-/**
- * https://android-developers.googleblog.com/2009/09/introduction-to-text-to-speech-in.html
- *
- * String myText1 = "Did you sleep well?";
- * String myText2 = "I hope so, because it's time to wake up.";
- * mTts.speak(myText1, TextToSpeech.QUEUE_FLUSH, null);
- * mTts.speak(myText2, TextToSpeech.QUEUE_ADD, null);
- *
- * the first speak() request would interrupt whatever was currently being synthesized: the queue is flushed and the new utterance is queued, which places it at the head of the queue. The second utterance is queued and will be played after myText1 has completed.
- * */
 const val ARG_PARAM_SCREEN_TYPE = "ARG_PARAM_SCREEN_TYPE"
 
 @AndroidEntryPoint
 class MainFragment : Fragment(), OnInitListener {
 
     companion object {
+        private val TAG = this::class.java.simpleName
+
         @JvmStatic
         fun newInstance(screenType: String) = MainFragment().apply {
             arguments = Bundle().apply {
@@ -155,23 +130,59 @@ class MainFragment : Fragment(), OnInitListener {
 
     private var playBookForegroundService: PlayBookForegroundService? = null
 
-    private var serviceBoundState = false
+    private var isServiceBound = false
+
+    private val messageReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            val msg = intent.getStringExtra(IntentExtraKey.MESSAGE)
+            when (msg) {
+                IntentExtraValue.TTS_READY -> {
+                    Log.d(TAG, "PREPARED broadcast received")
+//                    trackPrepared()
+                }
+
+                IntentExtraValue.READING_COMPLETE -> {
+                    Log.d(TAG, "COMPLETION broadcast received")
+//                    val newTrackIndex = intent.getIntExtra(Constants.CURRENT_TRACK_KEY, trackList.indexOf(currentTrack))
+//                    trackCompletion(newTrackIndex)
+                }
+
+                IntentExtraValue.UPDATE_PROGRESS -> {
+                    Log.d(TAG, "UPDATE PROGRESS broadcast received")
+//                    updateProgressBar()
+                }
+
+                IntentExtraValue.UNBIND -> {
+                    Log.d(TAG, "UNBIND REQ broadcast received")
+//                    unbind()
+                }
+
+                IntentExtraValue.SERVICE_DESTROYED -> {
+//                    onServiceDestroy()
+                }
+
+                IntentExtraValue.TTS_PAUSED -> {
+//                    onTrackPaused()
+                }
+            }
+        }
+    }
 
     // needed to communicate with the service.
-    private val connection = object : ServiceConnection {
+    private val ttsConnection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             // we've bound to ExampleLocationForegroundService, cast the IBinder and get ExampleLocationForegroundService instance.
             print("onServiceConnected")
             val binder = service as PlayBookForegroundService.LocalBinder
             playBookForegroundService = binder.getService()
-            serviceBoundState = true
+            isServiceBound = true
 //            onServiceConnected()
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
             // This is called when the connection with the service has been disconnected. Clean up.
             print("onServiceDisconnected")
-            serviceBoundState = false
+            isServiceBound = false
             playBookForegroundService = null
         }
     }
@@ -234,17 +245,27 @@ class MainFragment : Fragment(), OnInitListener {
     override fun onResume() {
         super.onResume()
         loadPdfs()
+        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(messageReceiver, IntentFilter(IntentKey.MAIN_BROADCAST))
+    }
+
+    override fun onPause() {
+        super.onPause()
+        if (isServiceBound) {
+            activity?.unbindService(ttsConnection)
+            isServiceBound = false
+        }
+
+        LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(messageReceiver)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        // tts?.shutdown()
-        activity?.unbindService(connection)
+        activity?.unbindService(ttsConnection)
     }
 
     override fun onInit(p0: Int) {
         print("Text-To-Speech engine is ready.")
-        TTS_LANGUAGE_LIST.forEach { locale: Locale ->
+        tts?.availableLanguages?.forEach { locale: Locale ->
             if (tts?.isLanguageAvailable(locale) == TextToSpeech.LANG_AVAILABLE) {
                 availableLanguages.add(locale)
             }
@@ -291,7 +312,9 @@ class MainFragment : Fragment(), OnInitListener {
 
     @SuppressLint("NotifyDataSetChanged")
     private fun FragmentMainBinding.setupUserActionListeners() {
-        root.setOnClickListener { }
+        root.setOnClickListener {}
+
+        layoutPersistentBottomSheet.root.setOnClickListener {}
 
         progressCircular.viewTreeObserver.addOnGlobalLayoutListener {
             if (progressCircular.isVisible.not()) {
@@ -355,7 +378,8 @@ class MainFragment : Fragment(), OnInitListener {
                     layoutPersistentBottomSheet.tvHeader.text = book?.title
                     layoutPersistentBottomSheet.tvCurrentlyReading.text = bookData.text
                     speak(startIndex = 0, endIndex = bookData.periodPositionsList.firstOrNull() ?: 0)
-                    startForegroundService()
+                    startForegroundService(book?.id ?: "")
+                    playBookForegroundService?.playPause(isPlay = true)
                     bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
                 }
             }
@@ -558,12 +582,16 @@ class MainFragment : Fragment(), OnInitListener {
         }
 
         layoutPersistentBottomSheet.ivPlay.setOnClickListener {
-            if (tts?.isSpeaking == true) {
-                tts?.stop()
+//            if (tts?.isSpeaking == true) {
+//                tts?.stop()
+//            } else {
+//                speak(startIndex = 0, endIndex = currentPlayingBookData?.periodPositionsList?.firstOrNull() ?: 0)
+//            }
+            if (playBookForegroundService?.getTts()?.isSpeaking == true) {
+                playBookForegroundService?.playPause(isPlay = false)
             } else {
-                speak(startIndex = 0, endIndex = currentPlayingBookData?.periodPositionsList?.firstOrNull() ?: 0)
+                playBookForegroundService?.playPause(isPlay = true)
             }
-
             setPlaybackViewState()
         }
 
@@ -571,32 +599,39 @@ class MainFragment : Fragment(), OnInitListener {
             layoutPersistentBottomSheet.ivPlay.performClick()
         }
 
-        layoutPersistentBottomSheet.ivForward.setOnClickListener {
+        layoutPersistentBottomSheet.ibNextSentence.setOnClickListener {
+            playBookForegroundService?.nextSentence()
             tts?.speak("text to speak", TextToSpeech.QUEUE_FLUSH, ttsParams, "")
         }
 
-        layoutPersistentBottomSheet.ivBackward.setOnClickListener {
+        layoutPersistentBottomSheet.ibPreviousSentence.setOnClickListener {
+            playBookForegroundService?.previousSentence()
             tts?.speak("text to speak", TextToSpeech.QUEUE_FLUSH, ttsParams, "")
         }
 
-        layoutPersistentBottomSheet.ivNext.setOnClickListener {
+        layoutPersistentBottomSheet.ibNextPage.setOnClickListener {
+            playBookForegroundService?.nextPage()
             tts?.speak("text to speak", TextToSpeech.QUEUE_FLUSH, ttsParams, "")
         }
 
-        layoutPersistentBottomSheet.ivPrevious.setOnClickListener {
+        layoutPersistentBottomSheet.ibPreviousPage.setOnClickListener {
+            playBookForegroundService?.previousPage()
             tts?.speak("text to speak", TextToSpeech.QUEUE_FLUSH, ttsParams, "")
         }
 
-        val ttsLanguageList = TTS_LANGUAGE_LIST.map { Pair(it.displayName, R.drawable.round_check_24) }
         layoutPersistentBottomSheet.ivHeaderMore.setOnClickListener { view: View? ->
+            val ttsLanguageList = availableLanguages.map { Pair(it.displayName, R.drawable.round_check_24) }
             val optionsList = listOf(
                 Pair("Select Language", R.drawable.round_language_24),
                 Pair("Save as audio file", R.drawable.outline_audio_file_24),
                 Pair("Settings", R.drawable.outline_settings_24),
+                Pair("Stop Playing", R.drawable.outline_cancel_24),
             )
             requireContext().showPopupMenuWithIcons(
                 view = layoutPersistentBottomSheet.ivHeaderMore,
-                menuList = optionsList
+                menuList = optionsList,
+                customColor = R.color.md_red_700,
+                customColorItemText = optionsList.last().first
             ) { it: MenuItem? ->
                 when (it?.title?.toString()?.trim()) {
                     optionsList[0].first -> {
@@ -607,16 +642,22 @@ class MainFragment : Fragment(), OnInitListener {
                             menuList = ttsLanguageList,
                         ) { menuItem: MenuItem? ->
                             selectedTtsLanguage = menuItem?.title?.toString()?.trim() ?: ""
-                            tts?.language = Locale(selectedTtsLanguage)
+                            tts?.setLanguage(Locale(selectedTtsLanguage))
                         }
                     }
 
                     optionsList[1].first -> {
-                        saveAsAudioFile()
+//                        saveAsAudioFile()
                     }
 
                     optionsList[2].first -> {
                         activity?.showTtsSettings()
+                    }
+
+                    optionsList[3].first -> {
+                        playBookForegroundService?.stopForegroundService()
+                        bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+                        layoutPersistentBottomSheet.root.isVisible = false
                     }
                 }
             }
@@ -624,7 +665,7 @@ class MainFragment : Fragment(), OnInitListener {
     }
 
     private fun FragmentMainBinding.setPlaybackViewState() {
-        if (tts?.isSpeaking == true) {
+        if (playBookForegroundService?.getTts()?.isSpeaking == true) {
             layoutPersistentBottomSheet.ivPlay.setImageDrawable(context?.drawable(R.drawable.round_play_arrow_24))
             layoutPersistentBottomSheet.ivHeaderPlay.setImageDrawable(context?.drawable(R.drawable.round_play_arrow_24))
         } else {
@@ -634,8 +675,13 @@ class MainFragment : Fragment(), OnInitListener {
     }
 
     private fun speak(startIndex: Int, endIndex: Int) {
+        val text = if (endIndex - startIndex > TextToSpeech.getMaxSpeechInputLength()) {
+            "Sentence is too long."
+        } else {
+            currentPlayingBookData?.text?.subSequence(startIndex, endIndex)
+        }
         tts?.speak(
-            /* text = */ currentPlayingBookData?.text?.subSequence(startIndex, endIndex),
+            /* text = */ text,
             /* queueMode = */ TextToSpeech.QUEUE_FLUSH,
             /* params = */ ttsParams,
             /* utteranceId = */ TtsTag.UID_SPEAK
@@ -662,11 +708,15 @@ class MainFragment : Fragment(), OnInitListener {
         }
     }
 
-    private fun startForegroundService() {
-        val intent = Intent(context, PlayBookForegroundService::class.java)
-        context?.applicationContext?.startForegroundService(intent)
+    private fun startForegroundService(bookId: String) {
+        if (playBookForegroundService != null) return
+
+        val intent = Intent(context, PlayBookForegroundService::class.java).apply {
+            putExtra(IntentExtraKey.BOOK_ID, bookId)
+        }
+        activity?.application?.startForegroundService(intent)
         // bind to the service to update UI
-        activity?.bindService(intent, connection, 0)
+        activity?.bindService(intent, ttsConnection, Context.BIND_AUTO_CREATE)
     }
 
     private fun stopForegroundService() {
@@ -732,32 +782,6 @@ class MainFragment : Fragment(), OnInitListener {
             action = TextToSpeech.Engine.ACTION_CHECK_TTS_DATA
         }
         ttsLauncher.launch(intent)
-    }
-
-    private fun doOnReadingDone() {
-        // This is probably not necessary. Add directly to speak
-        ttsParams.putString(
-            TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID,
-            "end of wakeup message ID"
-        )
-        tts?.speak(
-            /* text = */ "text to speak",
-            /* queueMode = */ TextToSpeech.QUEUE_ADD,
-            /* params = */ ttsParams,
-            /* utteranceId = */ ""
-        )
-    }
-
-    private fun saveAsAudioFile() {
-        val wakeUpText = "Are you up yet?"
-        val destFile = File("/sdcard/myAppCache/wakeUp.wav")
-        ttsParams.putString(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, wakeUpText) // this is unnecessary. Set in synthesizeToFile param utteranceId
-        tts?.synthesizeToFile(
-            /* text = */ wakeUpText,
-            /* params = */ ttsParams,
-            /* file = */ destFile,
-            /* utteranceId = */ ""
-        )
     }
 
     /** Any call to speak() for the same string content as wakeUpText will result in the playback of destFileName.

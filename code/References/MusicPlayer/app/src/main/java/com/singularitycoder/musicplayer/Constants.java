@@ -16,11 +16,11 @@ public class Constants
     public static final String SERVICE_DESTROY_MSG = "SERVICE_DESTROY_MSG";
     public static final String PAUSED_MSG = "PAUSED_MSG";
 
-    public static final String REWIND_INTENT_ACTION = "rewind";
     public static final int REWIND_INTENT_REQUEST_CODE = 1;
     public static final int PLAY_PAUSE_INTENT_REQUEST_CODE = 2;
     public static final int FORWARD_INTENT_REQUEST_CODE = 3;
     public static final int CLOSE_INTENT_REQUEST_CODE = 4;
+    public static final String REWIND_INTENT_ACTION = "rewind";
     public static final String PLAY_PAUSE_INTENT_ACTION = "play_pause";
     public static final String FORWARD_INTENT_ACTION = "forward";
     public static final String CLOSE_INTENT_ACTION = "close";

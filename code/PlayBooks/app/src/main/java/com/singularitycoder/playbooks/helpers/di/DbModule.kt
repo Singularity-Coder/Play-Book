@@ -20,7 +20,7 @@ object DbModule {
     @Singleton
     @Provides
     fun injectConnectMeDatabase(@ApplicationContext context: Context): PlayBookDatabase {
-        return Room.databaseBuilder(context, PlayBookDatabase::class.java, Db.CONNECT_ME).build()
+        return Room.databaseBuilder(context, PlayBookDatabase::class.java, Db.PLAY_BOOKS).build()
     }
 
     @Singleton

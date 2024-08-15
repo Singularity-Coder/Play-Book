@@ -121,14 +121,14 @@ public class MusicForegroundService extends Service implements MediaPlayer.OnPre
     @Override
     public void onDestroy() {
         super.onDestroy();
-        sendSelfDestroyMsg();
+        sendBroadcastToMain(Constants.SERVICE_DESTROY_MSG);
         unregisterReceiver(buttonClicksReceiver);
         unregisterExternalEventReceiver();
     }
 
     public void close() {
         musicForegroundService = null;
-        sendUnbindRequest();
+        sendBroadcastToMain(Constants.UNBIND_REQUEST_MSG);
         progressUpdaterHandler.removeCallbacks(trackProgressBarUpdaterRunnable);
         player.release();
         stopForeground(true);
@@ -138,25 +138,13 @@ public class MusicForegroundService extends Service implements MediaPlayer.OnPre
     private void onHeadsetUnplugged() {
         if (isPlaying) {
             pauseTrack();
-            sendPauseMsg();
+            sendBroadcastToMain(Constants.PAUSED_MSG);
         }
     }
 
-    private void sendPauseMsg() {
+    private void sendBroadcastToMain(String key) {
         Intent intent = new Intent(Constants.ACTIVITY_BROADCAST_INTENT_KEY);
-        intent.putExtra(Constants.MESSAGE_KEY, Constants.PAUSED_MSG);
-        localBroadcastManager.sendBroadcast(intent);
-    }
-
-    public void sendUnbindRequest() {
-        Intent intent = new Intent(Constants.ACTIVITY_BROADCAST_INTENT_KEY);
-        intent.putExtra(Constants.MESSAGE_KEY, Constants.UNBIND_REQUEST_MSG);
-        localBroadcastManager.sendBroadcast(intent);
-    }
-
-    public void sendSelfDestroyMsg() {
-        Intent intent = new Intent(Constants.ACTIVITY_BROADCAST_INTENT_KEY);
-        intent.putExtra(Constants.MESSAGE_KEY, Constants.SERVICE_DESTROY_MSG);
+        intent.putExtra(Constants.MESSAGE_KEY, key);
         localBroadcastManager.sendBroadcast(intent);
     }
 

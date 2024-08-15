@@ -821,8 +821,8 @@ fun File.getTextFromPdf(): PdfBook? = try {
         pageString.forEachIndexed { index, char ->
             if (char == '.') periodPositionsList.add(parsedText.length + index)
         }
-        // Extracting the content from different pages
-        parsedText = "$parsedText${pageString.trim { it <= ' ' }}\n\n\n\n"
+        // Extracting the content from different pages - add new lines if necessary - "$parsedText${pageString.trim { it <= ' ' }}\n\n\n\n"
+        parsedText = "$parsedText${pageString.trim { it <= ' ' }}"
         pagePositionsList.add(parsedText.length) // This will the position of next page
     }
     reader.close()

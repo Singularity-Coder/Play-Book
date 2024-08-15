@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tv_notification_track_title"
+        style="@style/TextAppearance.Compat.Notification.Title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:maxLines="2"
+        android:text="Book Name"
+        android:textColor="@color/black" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/iv_previous_page"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:background="@drawable/shape_rounded_square"
+            android:backgroundTint="@color/purple_50"
+            android:src="@drawable/round_skip_previous_24"
+            app:tint="@color/purple_500" />
+
+        <LinearLayout
+            android:id="@+id/ll_previous_sentence"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_toStartOf="@+id/iv_play_pause"
+            android:layout_toEndOf="@+id/iv_previous_page"
+            android:gravity="center_horizontal">
+
+            <ImageButton
+                android:id="@+id/iv_previous_sentence"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="@drawable/shape_rounded_square"
+                android:backgroundTint="@color/purple_50"
+                android:src="@drawable/round_fast_rewind_24"
+                app:tint="@color/purple_500" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/iv_play_pause"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:background="@drawable/shape_rounded_square"
+            android:backgroundTint="@color/purple_50"
+            android:src="@drawable/round_pause_24"
+            app:tint="@color/purple_500" />
+
+        <LinearLayout
+            android:id="@+id/ll_next_sentence"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_toStartOf="@+id/iv_next_page"
+            android:layout_toEndOf="@+id/iv_play_pause"
+            android:gravity="center_horizontal">
+
+            <ImageButton
+                android:id="@+id/iv_next_sentence"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="@drawable/shape_rounded_square"
+                android:backgroundTint="@color/purple_50"
+                android:src="@drawable/round_fast_forward_24"
+                app:tint="@color/purple_500" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/iv_next_page"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:background="@drawable/shape_rounded_square"
+            android:backgroundTint="@color/purple_50"
+            android:src="@drawable/round_skip_next_24"
+            app:tint="@color/purple_500" />
+    </RelativeLayout>
+
+</LinearLayout>
