@@ -8,11 +8,14 @@ import com.singularitycoder.playbooks.helpers.WorkerData
 import com.singularitycoder.playbooks.helpers.db.PlayBookDatabase
 import com.singularitycoder.playbooks.helpers.extension
 import com.singularitycoder.playbooks.helpers.getAppropriateSize
+import com.singularitycoder.playbooks.helpers.getBookCoversFileDir
 import com.singularitycoder.playbooks.helpers.getBookId
 import com.singularitycoder.playbooks.helpers.getDownloadDirectory
 import com.singularitycoder.playbooks.helpers.getFilesListFrom
 import com.singularitycoder.playbooks.helpers.getTextFromPdf
+import com.singularitycoder.playbooks.helpers.saveToStorage
 import com.singularitycoder.playbooks.helpers.sizeInBytes
+import com.singularitycoder.playbooks.helpers.toPdfFirstPageBitmap
 import com.singularitycoder.playbooks.helpers.toUpCase
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -68,6 +71,10 @@ class PdfToTextWorker(val context: Context, workerParams: WorkerParameters) : Co
                     if (bookDao.isItemPresent(id = it.getBookId()).not()) {
                         bookDataDao.insert(bookData = it.toBookData() ?: continue)
                         bookDao.insert(book = it.toBook() ?: continue)
+                        it.toPdfFirstPageBitmap().saveToStorage(
+                            fileName = "${it.getBookId()}.jpg",
+                            fileDir = context.getBookCoversFileDir()
+                        )
                     }
                 }
             } else {

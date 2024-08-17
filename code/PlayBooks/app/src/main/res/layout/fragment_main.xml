@@ -158,16 +158,4 @@
         layout="@layout/layout_persistent_bottom_sheet"
         android:visibility="gone" />
 
-    <!--    <com.google.android.material.floatingactionbutton.FloatingActionButton-->
-    <!--        android:id="@+id/fab_search"-->
-    <!--        android:layout_width="wrap_content"-->
-    <!--        android:layout_height="wrap_content"-->
-    <!--        android:layout_gravity="bottom|end"-->
-    <!--        android:layout_margin="16dp"-->
-    <!--        android:contentDescription="Search"-->
-    <!--        app:backgroundTint="@color/purple_500"-->
-    <!--        app:fabSize="normal"-->
-    <!--        app:shapeAppearanceOverlay="@style/fab_3_rounded"-->
-    <!--        app:srcCompat="@drawable/round_play_arrow_24"-->
-    <!--        app:tint="@android:color/white" />-->
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

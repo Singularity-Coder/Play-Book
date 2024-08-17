@@ -446,16 +446,13 @@ class MainFragment : Fragment(), OnInitListener {
                     requireActivity().requestStoragePermission()
                 }
 
-                getString(R.string.refresh) -> {
+                getString(R.string.no_books_found) -> {
                     loadPdfs()
                 }
 
                 else -> Unit
             }
         }
-
-//        fabSearch.onSafeClick {
-//        }
 
         layoutSearch.etSearch.onImeClick {
             layoutSearch.etSearch.hideKeyboard()

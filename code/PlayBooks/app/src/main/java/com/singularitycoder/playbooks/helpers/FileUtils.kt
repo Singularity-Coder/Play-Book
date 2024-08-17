@@ -214,7 +214,7 @@ fun Bitmap?.saveToStorage(
     }
     try {
         val out = FileOutputStream(file)
-        this?.compress(Bitmap.CompressFormat.JPEG, 90, out)
+        this?.compress(Bitmap.CompressFormat.JPEG, 50, out)
         out.flush()
         out.close()
     } catch (e: Exception) {
@@ -238,8 +238,8 @@ fun File?.toBitmap(): Bitmap? {
     return BitmapFactory.decodeFile(this?.absolutePath)
 }
 
-fun Context.getHomeLayoutBlurredImageFileDir(): String {
-    return "${filesDir.absolutePath}/common_images"
+fun Context.getBookCoversFileDir(): String {
+    return "${filesDir.absolutePath}/book_covers"
 }
 
 /** Checks if a volume containing external storage is available for read and write. */
@@ -849,6 +849,7 @@ fun hasPdfs(): Boolean {
 // https://stackoverflow.com/questions/6715898/what-is-parcelfiledescriptor-in-android
 // https://github.com/robolectric/robolectric/blob/master/robolectric/src/test/java/org/robolectric/shadows/ShadowParcelFileDescriptorTest.java
 fun File.toPdfFirstPageBitmap(): Bitmap? {
+    if (hasPdfs().not()) return null
     var bitmap: Bitmap? = null
     try {
         val pfd = ParcelFileDescriptor.open(
