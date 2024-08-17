@@ -28,6 +28,7 @@ android {
     }
     buildFeatures {
         viewBinding true
+        buildConfig true
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -47,13 +48,13 @@ dependencies {
     implementation libs.androidx.activity
     implementation libs.androidx.constraintlayout
     implementation libs.androidx.fragment.ktx
-    implementation libs.shimmer
+//    implementation libs.shimmer
     implementation libs.androidx.recyclerview
 
     // Coil Stuff
     implementation libs.coil
-    implementation libs.coil.gif
-    implementation libs.coil.video
+//    implementation libs.coil.gif
+//    implementation libs.coil.video
 
     // Coroutines
     implementation libs.kotlinx.coroutines.core

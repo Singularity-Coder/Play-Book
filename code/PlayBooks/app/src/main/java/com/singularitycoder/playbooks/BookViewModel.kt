@@ -20,6 +20,8 @@ class BookViewModel @Inject constructor(
 
     suspend fun getAllBookItems() = bookDao.getAll()
 
+    suspend fun hasBooks() = bookDao.hasItems()
+
     suspend fun getBookItemById(id: String) = bookDao.getItemById(id)
 
     suspend fun getBookDataItemById(id: String) = bookDataDao.getItemById(id)

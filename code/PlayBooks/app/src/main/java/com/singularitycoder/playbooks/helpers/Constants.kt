@@ -1,6 +1,6 @@
 package com.singularitycoder.playbooks.helpers
 
-import com.facebook.shimmer.BuildConfig
+import com.singularitycoder.playbooks.BuildConfig
 import com.singularitycoder.playbooks.MainFragment
 import com.singularitycoder.playbooks.R
 
@@ -10,16 +10,10 @@ val globalLayoutAnimation = R.anim.layout_animation_fall_down
 val globalSlideToBottomAnimation = R.anim.layout_animation_fall_down
 val globalSlideToTopAnimation = R.anim.layout_animation_slide_from_bottom
 
-val DUMMY_IMAGE_URLS = listOf(
-    "https://images.pexels.com/photos/2850287/pexels-photo-2850287.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-)
-
 object FragmentResultKey {
-    const val RENAME_DOWNLOAD_FILE = "RENAME_DOWNLOAD_FILE"
 }
 
 object FragmentResultBundleKey {
-    const val RENAME_DOWNLOAD_FILE = "RENAME_DOWNLOAD_FILE"
 }
 
 enum class NotificationAction {
@@ -54,13 +48,12 @@ object Db {
     const val PLAY_BOOKS = "db_play_books"
 }
 
-object Table {
+object DbTable {
     const val BOOK = "table_book"
     const val BOOK_DATA = "table_book_data"
 }
 
 object BroadcastKey {
-    const val LOCATION_TOGGLE_STATUS = "LOCATION_TOGGLE_STATUS"
 }
 
 object FragmentsTag {
@@ -72,7 +65,6 @@ object TtsTag {
 }
 
 object BottomSheetTag {
-    const val TAG_BOOK_READER_FILTERS = "TAG_BOOK_READER_FILTERS_BOTTOM_SHEET"
 }
 
 object WorkerData {

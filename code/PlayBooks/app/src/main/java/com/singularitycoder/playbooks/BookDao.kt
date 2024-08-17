@@ -2,7 +2,7 @@ package com.singularitycoder.playbooks
 
 import androidx.lifecycle.LiveData
 import androidx.room.*
-import com.singularitycoder.playbooks.helpers.Table
+import com.singularitycoder.playbooks.helpers.DbTable
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -16,9 +16,11 @@ interface BookDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(list: List<Book>)
 
-    @Query("SELECT EXISTS(SELECT * FROM ${Table.BOOK} WHERE id = :id)")
+    @Query("SELECT EXISTS(SELECT * FROM ${DbTable.BOOK} WHERE id = :id)")
     suspend fun isItemPresent(id: String): Boolean
 
+    @Query("SELECT EXISTS(SELECT 1 FROM ${DbTable.BOOK})")
+    suspend fun hasItems(): Boolean
 
     @Transaction
     @Update(onConflict = OnConflictStrategy.REPLACE)
@@ -27,13 +29,13 @@ interface BookDao {
 //    @Query("UPDATE ${Table.BOOK} SET link = :link WHERE website LIKE :website")
 //    fun updateLinkWithWebsite(link: String?, website: String)
 
-    @Query("SELECT * FROM ${Table.BOOK} WHERE id LIKE :id LIMIT 1")
+    @Query("SELECT * FROM ${DbTable.BOOK} WHERE id LIKE :id LIMIT 1")
     suspend fun getItemById(id: String): Book
 
-    @Query("SELECT * FROM ${Table.BOOK}")
+    @Query("SELECT * FROM ${DbTable.BOOK}")
     fun getAllItemsLiveData(): LiveData<List<Book>>
 
-    @Query("SELECT * FROM ${Table.BOOK}")
+    @Query("SELECT * FROM ${DbTable.BOOK}")
     fun getAllItemsStateFlow(): Flow<List<Book>>
 
 //    @Query("SELECT * FROM ${Table.BOOK} WHERE website = :website")
@@ -45,7 +47,7 @@ interface BookDao {
 //    @Query("SELECT * FROM ${Table.BOOK} WHERE website = :website")
 //    fun getItemByWebsiteStateFlow(website: String?): Flow<Book>
 
-    @Query("SELECT * FROM ${Table.BOOK}")
+    @Query("SELECT * FROM ${DbTable.BOOK}")
     suspend fun getAll(): List<Book>
 
 
@@ -58,10 +60,10 @@ interface BookDao {
 //    suspend fun deleteByWebsite(website: String?)
 
     @Transaction
-    @Query("DELETE FROM ${Table.BOOK} WHERE time >= :time")
+    @Query("DELETE FROM ${DbTable.BOOK} WHERE time >= :time")
     suspend fun deleteAllByTime(time: Long?)
 
     @Transaction
-    @Query("DELETE FROM ${Table.BOOK}")
+    @Query("DELETE FROM ${DbTable.BOOK}")
     suspend fun deleteAll()
 }

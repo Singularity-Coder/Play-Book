@@ -39,7 +39,7 @@
         android:insetTop="0dp"
         android:insetRight="0dp"
         android:insetBottom="0dp"
-        android:text="Give permission"
+        android:text="@string/give_permission"
         android:textAllCaps="false"
         android:textColor="@color/purple_500"
         android:textStyle="bold"

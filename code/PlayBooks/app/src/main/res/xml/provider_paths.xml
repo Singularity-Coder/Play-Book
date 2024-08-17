@@ -1,0 +1,8 @@
+<paths>
+
+    <!--https://developer.android.com/reference/androidx/core/content/FileProvider-->
+    <!-- . is root folder. external_files is the dir we create in root-->
+    <external-path
+        name="external_files"
+        path="." />
+</paths>

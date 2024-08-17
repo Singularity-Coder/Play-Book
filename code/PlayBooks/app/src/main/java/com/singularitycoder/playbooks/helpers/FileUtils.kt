@@ -850,27 +850,30 @@ fun hasPdfs(): Boolean {
 // https://github.com/robolectric/robolectric/blob/master/robolectric/src/test/java/org/robolectric/shadows/ShadowParcelFileDescriptorTest.java
 fun File.toPdfFirstPageBitmap(): Bitmap? {
     var bitmap: Bitmap? = null
-    val pfd = ParcelFileDescriptor.open(
-        /* file = */ this,
-        /* mode = */ ParcelFileDescriptor.MODE_READ_WRITE
-    )
-    val renderer = PdfRenderer(pfd) // create a new renderer
-    // render all pages
-    val pageCount = renderer.pageCount
-    for (i in 0 until pageCount) {
-        val page: PdfRenderer.Page = renderer.openPage(i)
-        bitmap = Bitmap.createBitmap(
-            /* width = */ page.width,
-            /* height = */ page.height,
-            /* config = */ Bitmap.Config.ARGB_8888
+    try {
+        val pfd = ParcelFileDescriptor.open(
+            /* file = */ this,
+            /* mode = */ ParcelFileDescriptor.MODE_READ_WRITE
         )
+        val renderer = PdfRenderer(pfd) // create a new renderer
+        // render all pages
+        val pageCount = renderer.pageCount
+        for (i in 0 until pageCount) {
+            val page: PdfRenderer.Page = renderer.openPage(i)
+            bitmap = Bitmap.createBitmap(
+                /* width = */ page.width,
+                /* height = */ page.height,
+                /* config = */ Bitmap.Config.ARGB_8888
+            )
 
-        // say we render for showing on the screen
-        page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
-        // do stuff with the bitmap
-        page.close()
-        break // quiting loop since we only want first page
+            // say we render for showing on the screen
+            page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+            // do stuff with the bitmap
+            page.close()
+            break // quiting loop since we only want first page
+        }
+        renderer.close()
+    } catch (_: Exception) {
     }
-    renderer.close()
     return bitmap
 }

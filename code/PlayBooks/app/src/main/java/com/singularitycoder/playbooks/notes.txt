@@ -68,3 +68,7 @@ mTts.speak(myText2, TextToSpeech.QUEUE_ADD, null);
 the first speak() request would interrupt whatever was currently being synthesized: the queue is flushed and the new utterance is queued, which places it at the head of the queue. The second utterance is queued and will be played after myText1 has completed.
 
 
+ERRORS:--------------------------------------------------
+
+android.os.FileUriExposedException: file:///storage/emulated/0/Download/The%20Enchanted%20April%20-%20Elizabeth%20von%20Arnim.pdf exposed beyond app through Intent.getData()
+https://stackoverflow.com/a/38858040/6802949

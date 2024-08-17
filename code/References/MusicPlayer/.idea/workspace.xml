@@ -1,0 +1,380 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AndroidLayouts">
+    <shared>
+      <config />
+    </shared>
+    <layouts>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/player_notification.xml">
+        <config>
+          <theme>@style/Theme.MusicPlayer</theme>
+        </config>
+      </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/tracks_list_item.xml">
+        <config>
+          <theme>@style/Theme.MusicPlayer</theme>
+        </config>
+      </layout>
+    </layouts>
+  </component>
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="NONE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="a727ddef-4a49-4caa-b05e-247da9a9c23d" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/../../PlayBooks/app/src/main/res/layout/layout_loading.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../PlayBooks/app/src/main/res/xml/provider_paths.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ForegroundService14Sample-master/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../PlayBooks/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../PlayBooks/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../PlayBooks/app/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/../../PlayBooks/app/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../PlayBooks/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../PlayBooks/app/src/main/AndroidManifest.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../PlayBooks/app/src/main/java/com/singularitycoder/playbooks/Book.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../../PlayBooks/app/src/main/java/com/singularitycoder/playbooks/Book.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../PlayBooks/app/src/main/java/com/singularitycoder/playbooks/BookDao.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../../PlayBooks/app/src/main/java/com/singularitycoder/playbooks/BookDao.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../PlayBooks/app/src/main/java/com/singularitycoder/playbooks/BookData.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../../PlayBooks/app/src/main/java/com/singularitycoder/playbooks/BookData.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../PlayBooks/app/src/main/java/com/singularitycoder/playbooks/BookDataDao.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../../PlayBooks/app/src/main/java/com/singularitycoder/playbooks/BookDataDao.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../PlayBooks/app/src/main/java/com/singularitycoder/playbooks/BookViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../../PlayBooks/app/src/main/java/com/singularitycoder/playbooks/BookViewModel.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../PlayBooks/app/src/main/java/com/singularitycoder/playbooks/DownloadsAdapter.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../../PlayBooks/app/src/main/java/com/singularitycoder/playbooks/DownloadsAdapter.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../PlayBooks/app/src/main/java/com/singularitycoder/playbooks/MainFragment.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../../PlayBooks/app/src/main/java/com/singularitycoder/playbooks/MainFragment.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../PlayBooks/app/src/main/java/com/singularitycoder/playbooks/PdfBook.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../../PlayBooks/app/src/main/java/com/singularitycoder/playbooks/PdfBook.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../PlayBooks/app/src/main/java/com/singularitycoder/playbooks/helpers/Constants.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../../PlayBooks/app/src/main/java/com/singularitycoder/playbooks/helpers/Constants.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../PlayBooks/app/src/main/java/com/singularitycoder/playbooks/helpers/FileUtils.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../../PlayBooks/app/src/main/java/com/singularitycoder/playbooks/helpers/FileUtils.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../PlayBooks/app/src/main/java/com/singularitycoder/playbooks/notes.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../../PlayBooks/app/src/main/java/com/singularitycoder/playbooks/notes.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../PlayBooks/app/src/main/res/layout/fragment_main.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../PlayBooks/app/src/main/res/layout/fragment_main.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../PlayBooks/app/src/main/res/layout/layout_grant_permission.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../PlayBooks/app/src/main/res/layout/layout_grant_permission.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../PlayBooks/app/src/main/res/values/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../PlayBooks/app/src/main/res/values/strings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../PlayBooks/dummy books/1984.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../PlayBooks/dummy books/Alice in wonderland.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../PlayBooks/dummy books/Dracula - Bram Stoker.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../PlayBooks/dummy books/The Enchanted April - Elizabeth von Arnim.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../PlayBooks/dummy books/Through the looking glass.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../PlayBooks/tts docs for reference/Android Developers Blog_ An introduction to Text-To-Speech in Android.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/app/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/app/build.gradle.kts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/app/proguard-rules.pro" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/app/src/main/AndroidManifest.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/app/src/main/java/com/landomen/sample/foregroundservice14/MainActivity.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/app/src/main/java/com/landomen/sample/foregroundservice14/notification/NotificationsHelper.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/app/src/main/java/com/landomen/sample/foregroundservice14/service/ExampleLocationForegroundService.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/app/src/main/java/com/landomen/sample/foregroundservice14/ui/ForegroundServiceSampleScreen.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/app/src/main/java/com/landomen/sample/foregroundservice14/ui/theme/Color.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/app/src/main/java/com/landomen/sample/foregroundservice14/ui/theme/Theme.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/app/src/main/java/com/landomen/sample/foregroundservice14/ui/theme/Type.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/app/src/main/res/drawable/ic_launcher_background.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/app/src/main/res/drawable/ic_launcher_foreground.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/app/src/main/res/mipmap-anydpi/ic_launcher.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/app/src/main/res/mipmap-anydpi/ic_launcher_round.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/app/src/main/res/mipmap-hdpi/ic_launcher.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/app/src/main/res/mipmap-hdpi/ic_launcher_round.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/app/src/main/res/mipmap-mdpi/ic_launcher.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/app/src/main/res/mipmap-mdpi/ic_launcher_round.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/app/src/main/res/mipmap-xhdpi/ic_launcher.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/app/src/main/res/mipmap-xhdpi/ic_launcher_round.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/app/src/main/res/mipmap-xxhdpi/ic_launcher.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/app/src/main/res/values/colors.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/app/src/main/res/values/strings.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/app/src/main/res/values/themes.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/app/src/main/res/xml/backup_rules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/app/src/main/res/xml/data_extraction_rules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/build.gradle.kts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/gradle.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/gradle/libs.versions.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/gradle/wrapper/gradle-wrapper.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/gradle/wrapper/gradle-wrapper.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/gradlew" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/gradlew.bat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/previews/preview0.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/previews/preview1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/previews/preview2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/previews/preview3.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/previews/preview4.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ForegroundService14Sample-master/settings.gradle.kts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/build.gradle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/proguard-rules.pro" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/androidTest/java/com/singularitycoder/musicplayer/ExampleInstrumentedTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/singularitycoder/musicplayer/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/singularitycoder/musicplayer/.idea/git_toolbox_blame.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/singularitycoder/musicplayer/.idea/misc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/singularitycoder/musicplayer/.idea/modules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/singularitycoder/musicplayer/.idea/other.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/singularitycoder/musicplayer/.idea/vcs.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/singularitycoder/musicplayer/AboutAuthorActivity.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/singularitycoder/musicplayer/Constants.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/singularitycoder/musicplayer/MainActivity.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/singularitycoder/musicplayer/MusicApp.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/singularitycoder/musicplayer/MusicForegroundService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/singularitycoder/musicplayer/SettingsActivity.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/singularitycoder/musicplayer/Track.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/singularitycoder/musicplayer/TrackListAdapter.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/singularitycoder/musicplayer/data/PlayerDataProvider.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/singularitycoder/musicplayer/utils/StringTrackUtils.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/singularitycoder/musicplayer/utils/TimeConverterUtils.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/singularitycoder/musicplayer/viewmodel/MusicPlayerViewModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/singularitycoder/musicplayer/viewmodel/MusicPlayerViewModelFactory.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/drawable/baseline_audiotrack_black_18.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/drawable/baseline_close_black_36.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/drawable/baseline_fast_forward_24.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/drawable/baseline_fast_forward_black_36.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/drawable/baseline_fast_forward_white_48.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/drawable/baseline_fast_rewind_24.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/drawable/baseline_fast_rewind_black_36.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/drawable/baseline_fast_rewind_white_48.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/drawable/baseline_pause_black_36.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/drawable/baseline_pause_white_36.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/drawable/baseline_pause_white_48.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/drawable/baseline_play_arrow_black_36.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/drawable/baseline_play_arrow_white_36.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/drawable/baseline_play_arrow_white_48.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/drawable/baseline_play_circle_24.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/drawable/ic_launcher_background.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/drawable/ic_launcher_foreground.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/drawable/random_image.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/drawable/track_list_item_border.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/activity_about_author.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/activity_main.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/activity_settings.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/player_notification.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/tracks_list_item.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/menu/activity_main_menu.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/mipmap-anydpi/ic_launcher.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/mipmap-anydpi/ic_launcher_round.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/mipmap-hdpi/ic_launcher.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/mipmap-hdpi/ic_launcher_round.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/mipmap-mdpi/ic_launcher.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/mipmap-mdpi/ic_launcher_round.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/mipmap-xhdpi/ic_launcher.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/mipmap-xhdpi/ic_launcher_round.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/mipmap-xxhdpi/ic_launcher.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/values-night/themes.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/values-v21/styles.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/values/colors.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/values/strings.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/values/themes.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/xml/backup_rules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/xml/data_extraction_rules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/test/java/com/singularitycoder/musicplayer/ExampleUnitTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gradle.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gradle/libs.versions.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gradlew" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gradlew.bat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/settings.gradle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/app/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/app/build.gradle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/app/proguard-rules.pro" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/app/src/androidTest/java/com/singularitycoder/sqlitecodesnippets/ExampleInstrumentedTest.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/app/src/main/AndroidManifest.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/app/src/main/java/com/singularitycoder/sqlitecodesnippets/MyApp.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/app/src/main/java/com/singularitycoder/sqlitecodesnippets/db/DbOps.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/app/src/main/java/com/singularitycoder/sqlitecodesnippets/db/TodoDao.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/app/src/main/java/com/singularitycoder/sqlitecodesnippets/db/TodoRoomDatabase.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/app/src/main/java/com/singularitycoder/sqlitecodesnippets/model/Todo.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/app/src/main/java/com/singularitycoder/sqlitecodesnippets/ui/MainActivity.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/app/src/main/java/com/singularitycoder/sqlitecodesnippets/ui/MainActivityUI.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/app/src/main/java/com/singularitycoder/sqlitecodesnippets/ui/theme/Color.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/app/src/main/java/com/singularitycoder/sqlitecodesnippets/ui/theme/Shape.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/app/src/main/java/com/singularitycoder/sqlitecodesnippets/ui/theme/Theme.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/app/src/main/java/com/singularitycoder/sqlitecodesnippets/ui/theme/Type.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/app/src/main/res/drawable/ic_launcher_background.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/app/src/main/res/mipmap-hdpi/ic_launcher.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/app/src/main/res/mipmap-hdpi/ic_launcher_round.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/app/src/main/res/mipmap-mdpi/ic_launcher.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/app/src/main/res/mipmap-mdpi/ic_launcher_round.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/app/src/main/res/mipmap-xhdpi/ic_launcher.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/app/src/main/res/mipmap-xhdpi/ic_launcher_round.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/app/src/main/res/mipmap-xxhdpi/ic_launcher.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.webp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/app/src/main/res/values-night/themes.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/app/src/main/res/values/colors.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/app/src/main/res/values/strings.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/app/src/main/res/values/themes.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/app/src/test/java/com/singularitycoder/sqlitecodesnippets/ExampleUnitTest.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/build.gradle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/gradle.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/gradle/wrapper/gradle-wrapper.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/gradle/wrapper/gradle-wrapper.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/gradlew" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/gradlew.bat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../SQLiteCodeSnippets/settings.gradle" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[DeviceId(pluginId=LocalEmulator, isTemplate=false, identifier=path=/Users/harekrsna/.android/avd/Pixel_7_Pro_Edited_API_34.avd)]" />
+  <component name="ExternalProjectsData">
+    <projectState path="$PROJECT_DIR$">
+      <ProjectState />
+    </projectState>
+  </component>
+  <component name="ExternalProjectsManager">
+    <system id="GRADLE">
+      <state>
+        <task path="$PROJECT_DIR$/app">
+          <activation />
+        </task>
+        <projects_view>
+          <tree_state>
+            <expand>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="MusicPlayer" type="f1a62948:ProjectNode" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="MusicPlayer" type="f1a62948:ProjectNode" />
+                <item name="app" type="2d1252cf:ModuleNode" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="MusicPlayer" type="f1a62948:ProjectNode" />
+                <item name="app" type="2d1252cf:ModuleNode" />
+                <item name="Tasks" type="e4a08cd1:TasksNode" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="MusicPlayer" type="f1a62948:ProjectNode" />
+                <item name="app" type="2d1252cf:ModuleNode" />
+                <item name="Tasks" type="e4a08cd1:TasksNode" />
+                <item name="other" type="c8890929:TasksNode$1" />
+              </path>
+            </expand>
+            <select />
+          </tree_state>
+        </projects_view>
+      </state>
+    </system>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../../.." />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 2
+}</component>
+  <component name="ProjectId" id="2kYtbaQpp2PphPS83X8vAVTYlBA" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
+    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;Android App.app.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
+    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
+    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/harekrsna/Desktop/Work/Instant-SQLite/code/References/MusicPlayer&quot;
+  }
+}</component>
+  <component name="RunManager">
+    <configuration name="app" type="AndroidRunConfigurationType" factoryName="Android App">
+      <module name="MusicPlayer.app.main" />
+      <option name="DEPLOY" value="true" />
+      <option name="DEPLOY_APK_FROM_BUNDLE" value="false" />
+      <option name="DEPLOY_AS_INSTANT" value="false" />
+      <option name="ARTIFACT_NAME" value="" />
+      <option name="PM_INSTALL_OPTIONS" value="" />
+      <option name="ALL_USERS" value="false" />
+      <option name="ALWAYS_INSTALL_WITH_PM" value="false" />
+      <option name="CLEAR_APP_STORAGE" value="false" />
+      <option name="DYNAMIC_FEATURES_DISABLED_LIST" value="" />
+      <option name="ACTIVITY_EXTRA_FLAGS" value="" />
+      <option name="MODE" value="default_activity" />
+      <option name="CLEAR_LOGCAT" value="false" />
+      <option name="SHOW_LOGCAT_AUTOMATICALLY" value="false" />
+      <option name="TARGET_SELECTION_MODE" value="DEVICE_AND_SNAPSHOT_COMBO_BOX" />
+      <option name="SELECTED_CLOUD_MATRIX_CONFIGURATION_ID" value="-1" />
+      <option name="SELECTED_CLOUD_MATRIX_PROJECT_ID" value="" />
+      <option name="DEBUGGER_TYPE" value="Auto" />
+      <Auto>
+        <option name="USE_JAVA_AWARE_DEBUGGER" value="false" />
+        <option name="SHOW_STATIC_VARS" value="true" />
+        <option name="WORKING_DIR" value="" />
+        <option name="TARGET_LOGGING_CHANNELS" value="lldb process:gdb-remote packets" />
+        <option name="SHOW_OPTIMIZED_WARNING" value="true" />
+        <option name="ATTACH_ON_WAIT_FOR_DEBUGGER" value="false" />
+        <option name="DEBUG_SANDBOX_SDK" value="false" />
+      </Auto>
+      <Hybrid>
+        <option name="USE_JAVA_AWARE_DEBUGGER" value="false" />
+        <option name="SHOW_STATIC_VARS" value="true" />
+        <option name="WORKING_DIR" value="" />
+        <option name="TARGET_LOGGING_CHANNELS" value="lldb process:gdb-remote packets" />
+        <option name="SHOW_OPTIMIZED_WARNING" value="true" />
+        <option name="ATTACH_ON_WAIT_FOR_DEBUGGER" value="false" />
+        <option name="DEBUG_SANDBOX_SDK" value="false" />
+      </Hybrid>
+      <Java>
+        <option name="ATTACH_ON_WAIT_FOR_DEBUGGER" value="false" />
+        <option name="DEBUG_SANDBOX_SDK" value="false" />
+      </Java>
+      <Native>
+        <option name="USE_JAVA_AWARE_DEBUGGER" value="false" />
+        <option name="SHOW_STATIC_VARS" value="true" />
+        <option name="WORKING_DIR" value="" />
+        <option name="TARGET_LOGGING_CHANNELS" value="lldb process:gdb-remote packets" />
+        <option name="SHOW_OPTIMIZED_WARNING" value="true" />
+        <option name="ATTACH_ON_WAIT_FOR_DEBUGGER" value="false" />
+        <option name="DEBUG_SANDBOX_SDK" value="false" />
+      </Native>
+      <Profilers>
+        <option name="ADVANCED_PROFILING_ENABLED" value="false" />
+        <option name="STARTUP_PROFILING_ENABLED" value="false" />
+        <option name="STARTUP_CPU_PROFILING_ENABLED" value="false" />
+        <option name="STARTUP_CPU_PROFILING_CONFIGURATION_NAME" value="Java/Kotlin Method Sample (legacy)" />
+        <option name="STARTUP_NATIVE_MEMORY_PROFILING_ENABLED" value="false" />
+        <option name="NATIVE_MEMORY_SAMPLE_RATE_BYTES" value="2048" />
+      </Profilers>
+      <option name="DEEP_LINK" value="" />
+      <option name="ACTIVITY_CLASS" value="" />
+      <option name="SEARCH_ACTIVITY_IN_GLOBAL_SCOPE" value="false" />
+      <option name="SKIP_ACTIVITY_VALIDATION" value="false" />
+      <method v="2">
+        <option name="Android.Gradle.BeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="a727ddef-4a49-4caa-b05e-247da9a9c23d" name="Changes" comment="" />
+      <created>1723472409815</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1723472409815</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
+  </component>
+</project>

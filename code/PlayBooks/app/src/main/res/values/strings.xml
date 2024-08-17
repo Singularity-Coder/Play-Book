@@ -8,4 +8,7 @@
     <string name="foreground_service_sample_notification_channel_general_name">General notification</string>
     <string name="foreground_service_sample_notification_title">Foreground Service</string>
     <string name="foreground_service_sample_notification_description">Sample app is running in the background.</string>
+    <string name="no_books_found">No books found</string>
+    <string name="give_permission">Give permission</string>
+    <string name="refresh">Refresh</string>
 </resources>

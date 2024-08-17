@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import com.singularitycoder.playbooks.databinding.ListItemDownloadBinding
-import com.singularitycoder.playbooks.helpers.DUMMY_IMAGE_URLS
 import com.singularitycoder.playbooks.helpers.deviceHeight
 import com.singularitycoder.playbooks.helpers.deviceWidth
 import com.singularitycoder.playbooks.helpers.onCustomLongClick

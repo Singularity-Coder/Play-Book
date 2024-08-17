@@ -3,11 +3,10 @@ package com.singularitycoder.playbooks
 import android.os.Parcelable
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.singularitycoder.playbooks.helpers.Table
-import com.singularitycoder.playbooks.helpers.sanitize
+import com.singularitycoder.playbooks.helpers.DbTable
 import kotlinx.parcelize.Parcelize
 
-@Entity(tableName = Table.BOOK)
+@Entity(tableName = DbTable.BOOK)
 @Parcelize
 data class Book(
     @PrimaryKey var id: String,

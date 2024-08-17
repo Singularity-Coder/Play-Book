@@ -10,7 +10,6 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.ServiceConnection
 import android.media.AudioManager
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
@@ -27,6 +26,8 @@ import android.widget.SeekBar
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
+import androidx.core.content.FileProvider
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
@@ -42,9 +43,8 @@ import coil.load
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetBehavior.BottomSheetCallback
 import com.google.android.material.card.MaterialCardView
-import com.google.android.material.snackbar.BaseTransientBottomBar
-import com.google.android.material.snackbar.Snackbar
 import com.singularitycoder.playbooks.databinding.FragmentMainBinding
+import com.singularitycoder.playbooks.helpers.FILE_PROVIDER
 import com.singularitycoder.playbooks.helpers.IntentExtraKey
 import com.singularitycoder.playbooks.helpers.IntentExtraValue
 import com.singularitycoder.playbooks.helpers.IntentKey
@@ -77,11 +77,11 @@ import com.singularitycoder.playbooks.helpers.showTtsSettings
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.Locale
+
 
 const val ARG_PARAM_SCREEN_TYPE = "ARG_PARAM_SCREEN_TYPE"
 
@@ -120,8 +120,6 @@ class MainFragment : Fragment(), OnInitListener {
 //    private var currentBookPosition = 0
 
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<MaterialCardView>
-
-    private var bookLoadingSnackBar: Snackbar? = null
 
     private var currentPlayingBook: Book? = null
     private var currentPlayingBookData: BookData? = null
@@ -316,10 +314,12 @@ class MainFragment : Fragment(), OnInitListener {
 
         layoutPersistentBottomSheet.root.setOnClickListener {}
 
+        binding.layoutLoading.btnStop.onSafeClick {
+            WorkManager.getInstance(requireContext()).cancelAllWork() // cancelAllWorkByTag is not working
+        }
+
         progressCircular.viewTreeObserver.addOnGlobalLayoutListener {
-            if (progressCircular.isVisible.not()) {
-                dismissBookLoadingSnackbar()
-            }
+            binding.layoutLoading.root.isVisible = progressCircular.isVisible
         }
 
         ivHeaderMore.onSafeClick { view: Pair<View?, Boolean> ->
@@ -402,10 +402,12 @@ class MainFragment : Fragment(), OnInitListener {
                 when (it?.title?.toString()?.trim()) {
                     optionsList[0].first -> {
                         val file = File(book?.path ?: "")
-                        val path = Uri.fromFile(file)
-                        val intent = Intent(Intent.ACTION_VIEW).apply {
+                        val uri = FileProvider.getUriForFile(requireContext(), FILE_PROVIDER, file)
+                        val intent = Intent().apply {
+                            action = Intent.ACTION_VIEW
                             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-                            setDataAndType(path, "application/pdf")
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            setDataAndType(uri, "application/pdf")
                         }
                         val chooserIntent = Intent.createChooser(intent, "Open with...").apply {
                             putExtra(Intent.EXTRA_INITIAL_INTENTS, arrayOf(intent))
@@ -442,6 +444,10 @@ class MainFragment : Fragment(), OnInitListener {
 
                 getString(R.string.grant_storage_permission) -> {
                     requireActivity().requestStoragePermission()
+                }
+
+                getString(R.string.refresh) -> {
+                    loadPdfs()
                 }
 
                 else -> Unit
@@ -737,7 +743,7 @@ class MainFragment : Fragment(), OnInitListener {
                 setPermissionView(
                     isShow = true,
                     icon = R.drawable.round_notifications_active_24,
-                    title = getString(R.string.grant_notification_permission),
+                    title = R.string.grant_notification_permission,
                     isShowButton = true
                 )
                 return
@@ -745,32 +751,24 @@ class MainFragment : Fragment(), OnInitListener {
         }
 
         if (activity?.hasStoragePermission() == true) {
-            setPermissionView(
-                isShow = hasPdfs().not(),
-                icon = R.drawable.round_menu_book_24,
-                title = "No books found",
-                isShowButton = false
-            )
-            if (hasPdfs().not()) return
+            var hasBooksInDb = false
+            CoroutineScope(Dispatchers.IO).launch {
+                hasBooksInDb = bookViewModel.hasBooks()
 
-            if (booksAdapter.bookList.isEmpty()) {
-                CoroutineScope(Dispatchers.Main).launch {
-                    delay(2000)
-                    bookLoadingSnackBar = Snackbar.make(binding.root, "Books are loading, please wait.", Snackbar.LENGTH_INDEFINITE).apply {
-                        this.animationMode = BaseTransientBottomBar.ANIMATION_MODE_SLIDE
-                        this.anchorView = binding.layoutPersistentBottomSheet.root
-                        setAction("OK") {}
-                        this.show()
-                    }
-//                    binding.root.showSnackBar(
-//                        message = "Books are loading, please wait.",
-//                        anchorView = binding.layoutPersistentBottomSheet.root,
-//                        duration = Snackbar.LENGTH_INDEFINITE,
-//                        isAnimated = false,
-//                        actionBtnText = "OK"
-//                    )
+                withContext(Dispatchers.Main) {
+                    setPermissionView(
+                        isShow = hasPdfs().not() && hasBooksInDb.not(),
+                        icon = R.drawable.round_menu_book_24,
+                        title = R.string.no_books_found,
+                        isShowButton = true,
+                        btnText = R.string.refresh
+                    )
                 }
             }
+            if (hasPdfs().not() && hasBooksInDb.not()) return
+            /** This will continue the existing work instead of starting new if app is not killed */
+            if (binding.progressCircular.isVisible) return
+
             setPermissionView(isShow = false)
             binding.rvDownloads.isVisible = true
             convertPdfToTextInWorker()
@@ -830,7 +828,6 @@ class MainFragment : Fragment(), OnInitListener {
                 WorkInfo.State.SUCCEEDED -> {
                     // TODO show manual rss url field
                     showProgressBar(false)
-                    dismissBookLoadingSnackbar()
                 }
 
                 WorkInfo.State.FAILED -> showProgressBar(false)
@@ -838,12 +835,6 @@ class MainFragment : Fragment(), OnInitListener {
                 WorkInfo.State.CANCELLED -> showProgressBar(false)
                 else -> Unit
             }
-        }
-    }
-
-    private fun dismissBookLoadingSnackbar() {
-        if (bookLoadingSnackBar?.isShownOrQueued == true) {
-            bookLoadingSnackBar?.dismiss()
         }
     }
 
@@ -858,14 +849,16 @@ class MainFragment : Fragment(), OnInitListener {
     private fun setPermissionView(
         isShow: Boolean,
         @DrawableRes icon: Int = R.drawable.outline_security_24,
-        title: String = getString(R.string.grant_storage_permission),
-        isShowButton: Boolean = true
+        @StringRes title: Int = R.string.grant_storage_permission,
+        isShowButton: Boolean = true,
+        @StringRes btnText: Int = R.string.give_permission
     ) {
         binding.layoutGrantPermission.apply {
             root.isVisible = isShow
             ivIcon.load(icon)
-            tvTitle.text = title
+            tvTitle.text = getString(title)
             btnGivePermission.isVisible = isShowButton
+            btnGivePermission.text = getString(btnText)
         }
     }
 }
