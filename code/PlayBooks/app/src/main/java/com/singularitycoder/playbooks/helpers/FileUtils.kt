@@ -59,6 +59,9 @@ import java.util.UUID
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
+import kotlin.coroutines.Continuation
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 
 const val KB = 1024.0
@@ -184,24 +187,27 @@ fun Context.isOldStorageReadPermissionGranted(): Boolean {
 }
 
 // https://stackoverflow.com/questions/15662258/how-to-save-a-bitmap-on-internal-storage
-fun Bitmap?.saveToStorage(
+suspend fun Bitmap?.saveToStorage(
     fileName: String,
     fileDir: String,
 ) {
+    suspendCoroutine<Unit> { cont: Continuation<Unit> ->
 //    val root: String = Environment.getExternalStorageDirectory().absolutePath
-    val directory = File(fileDir).also {
-        if (it.exists().not()) it.mkdirs()
-    }
-    val file = File(/* parent = */ directory, /* child = */ fileName).also {
-        if (it.exists().not()) it.createNewFile() else return
-    }
-    try {
-        val out = FileOutputStream(file)
-        this?.compress(Bitmap.CompressFormat.JPEG, 50, out)
-        out.flush()
-        out.close()
-    } catch (e: Exception) {
-        e.printStackTrace()
+        val directory = File(fileDir).also {
+            if (it.exists().not()) it.mkdirs()
+        }
+        val file = File(/* parent = */ directory, /* child = */ fileName).also {
+            if (it.exists().not()) it.createNewFile() else return@suspendCoroutine
+        }
+        try {
+            val out = FileOutputStream(file)
+            this?.compress(Bitmap.CompressFormat.JPEG, 50, out)
+            cont.resume(Unit)
+            out.flush()
+            out.close()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 }
 
@@ -831,35 +837,36 @@ fun hasPdfs(): Boolean {
 // https://developer.android.com/reference/android/graphics/pdf/PdfRenderer
 // https://stackoverflow.com/questions/6715898/what-is-parcelfiledescriptor-in-android
 // https://github.com/robolectric/robolectric/blob/master/robolectric/src/test/java/org/robolectric/shadows/ShadowParcelFileDescriptorTest.java
-fun File.toPdfFirstPageBitmap(): Bitmap? {
-    if (hasPdfs().not()) return null
-    var bitmap: Bitmap? = null
-    try {
-        val pfd = ParcelFileDescriptor.open(
-            /* file = */ this,
-            /* mode = */ ParcelFileDescriptor.MODE_READ_WRITE
-        )
-        val renderer = PdfRenderer(pfd) // create a new renderer
-        // render all pages
-        val pageCount = renderer.pageCount
-        for (i in 0 until pageCount) {
-            val page: PdfRenderer.Page = renderer.openPage(i)
-            bitmap = Bitmap.createBitmap(
-                /* width = */ page.width,
-                /* height = */ page.height,
-                /* config = */ Bitmap.Config.ARGB_8888
+suspend fun File.toPdfFirstPageBitmap(): Bitmap? {
+    return suspendCoroutine<Bitmap?> { cont: Continuation<Bitmap> ->
+        var bitmap: Bitmap? = null
+        try {
+            val pfd = ParcelFileDescriptor.open(
+                /* file = */ this,
+                /* mode = */ ParcelFileDescriptor.MODE_READ_WRITE
             )
+            val renderer = PdfRenderer(pfd) // create a new renderer
+            // render all pages
+            val pageCount = renderer.pageCount
+            for (i in 0 until pageCount) {
+                val page: PdfRenderer.Page = renderer.openPage(i)
+                bitmap = Bitmap.createBitmap(
+                    /* width = */ page.width,
+                    /* height = */ page.height,
+                    /* config = */ Bitmap.Config.ARGB_8888
+                )
 
-            // say we render for showing on the screen
-            page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
-            // do stuff with the bitmap
-            page.close()
-            break // quiting loop since we only want first page
+                // say we render for showing on the screen
+                page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                // do stuff with the bitmap
+                cont.resume(bitmap)
+                page.close()
+                break // quiting loop since we only want first page
+            }
+            renderer.close()
+        } catch (_: Exception) {
         }
-        renderer.close()
-    } catch (_: Exception) {
     }
-    return bitmap
 }
 
 inline fun deleteAllFilesFrom(

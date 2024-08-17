@@ -69,12 +69,14 @@ class PdfToTextWorker(val context: Context, workerParams: WorkerParameters) : Co
             if (it.isFile) {
                 if (it.extension().contains(other = "pdf", ignoreCase = true)) {
                     if (bookDao.isItemPresent(id = it.getBookId()).not()) {
-                        bookDataDao.insert(bookData = it.toBookData() ?: continue)
-                        bookDao.insert(book = it.toBook() ?: continue)
+                        val bookData = it.toBookData() ?: continue
+                        val book = it.toBook() ?: continue
                         it.toPdfFirstPageBitmap().saveToStorage(
                             fileName = "${it.getBookId()}.jpg",
                             fileDir = context.getBookCoversFileDir()
                         )
+                        bookDataDao.insert(bookData = bookData)
+                        bookDao.insert(book = book)
                     }
                 }
             } else {
