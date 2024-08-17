@@ -124,23 +124,6 @@ fun Context.externalFilesDir(
     fileName: String? = null,
 ): File = File(getExternalFilesDir(rootDir).customPath(subDir, fileName))
 
-inline fun deleteAllFilesFrom(
-    directory: File?,
-    withName: String,
-    crossinline onDone: () -> Unit = {}
-) {
-    CoroutineScope(Dispatchers.Default).launch {
-        directory?.listFiles()?.filter { it.exists() }?.forEach files@{ it: File? ->
-            it ?: return@files
-            if (it.name.contains(withName)) {
-                if (it.exists()) it.delete()
-            }
-        }
-
-        withContext(Dispatchers.Main) { onDone.invoke() }
-    }
-}
-
 // Get path from Uri
 // content resolver instance used for firing a query inside the internal sqlite database that contains all file info from android os
 // projection is the set of columns u want to fetch from sqlite db
@@ -877,4 +860,26 @@ fun File.toPdfFirstPageBitmap(): Bitmap? {
     } catch (_: Exception) {
     }
     return bitmap
+}
+
+inline fun deleteAllFilesFrom(
+    directory: File?,
+    crossinline onDone: () -> Unit = {}
+) {
+    CoroutineScope(Dispatchers.Default).launch {
+        directory?.listFiles()?.forEach files@{ it: File? ->
+            it ?: return@files
+            if (it.exists().not()) return@files
+            it.delete()
+        }
+
+        withContext(Dispatchers.Main) { onDone.invoke() }
+    }
+}
+
+fun deleteFileFrom(path: String) {
+    CoroutineScope(Dispatchers.Default).launch {
+        val file = File(path)
+        if (file.exists()) file.delete()
+    }
 }

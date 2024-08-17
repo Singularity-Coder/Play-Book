@@ -52,9 +52,12 @@ import com.singularitycoder.playbooks.helpers.TtsTag
 import com.singularitycoder.playbooks.helpers.WorkerData
 import com.singularitycoder.playbooks.helpers.WorkerTag
 import com.singularitycoder.playbooks.helpers.collectLatestLifecycleFlow
+import com.singularitycoder.playbooks.helpers.deleteAllFilesFrom
+import com.singularitycoder.playbooks.helpers.deleteFileFrom
 import com.singularitycoder.playbooks.helpers.deviceHeight
 import com.singularitycoder.playbooks.helpers.dpToPx
 import com.singularitycoder.playbooks.helpers.drawable
+import com.singularitycoder.playbooks.helpers.getBookCoversFileDir
 import com.singularitycoder.playbooks.helpers.getBookId
 import com.singularitycoder.playbooks.helpers.getDownloadDirectory
 import com.singularitycoder.playbooks.helpers.globalLayoutAnimation
@@ -349,6 +352,7 @@ class MainFragment : Fragment(), OnInitListener {
                                 stopPlayer()
                                 bookViewModel.deleteAllBookDataItems()
                                 bookViewModel.deleteAllBookItems()
+                                deleteAllFilesFrom(directory = File(requireContext().getBookCoversFileDir()))
                                 booksAdapter.notifyDataSetChanged()
                             }
                         )
@@ -428,6 +432,7 @@ class MainFragment : Fragment(), OnInitListener {
                             positiveAction = {
                                 bookViewModel.deleteBookDataItem(book)
                                 bookViewModel.deleteBookItem(book)
+                                deleteFileFrom(path = "${requireContext().getBookCoversFileDir()}/${book?.id}.jpg")
                                 booksAdapter.notifyItemRemoved(position ?: 0)
                             }
                         )

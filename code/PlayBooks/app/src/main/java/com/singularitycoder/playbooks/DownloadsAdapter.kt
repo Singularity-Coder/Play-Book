@@ -10,10 +10,8 @@ import com.singularitycoder.playbooks.databinding.ListItemDownloadBinding
 import com.singularitycoder.playbooks.helpers.deviceHeight
 import com.singularitycoder.playbooks.helpers.deviceWidth
 import com.singularitycoder.playbooks.helpers.getBookCoversFileDir
-import com.singularitycoder.playbooks.helpers.getBookId
 import com.singularitycoder.playbooks.helpers.onCustomLongClick
 import com.singularitycoder.playbooks.helpers.onSafeClick
-import com.singularitycoder.playbooks.helpers.toPdfFirstPageBitmap
 import java.io.File
 
 class DownloadsAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
