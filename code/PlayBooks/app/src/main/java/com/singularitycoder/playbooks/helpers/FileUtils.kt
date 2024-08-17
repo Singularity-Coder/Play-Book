@@ -811,7 +811,9 @@ fun File.getText(
 }
 
 // https://stackoverflow.com/questions/58750885/how-can-i-convert-pdf-file-to-text
-fun File.getTextFromPdf(): PdfBook? = try {
+suspend fun File.getTextFromPdf(
+    callback: suspend (progress: Int, totalPages: Int) -> Unit
+): PdfBook? = try {
     var parsedText = ""
     val pagePositionsList = mutableListOf<Int>()
     val periodPositionsList = mutableListOf<Int>()
@@ -824,6 +826,7 @@ fun File.getTextFromPdf(): PdfBook? = try {
         // Extracting the content from different pages - add new lines if necessary - "$parsedText${pageString.trim { it <= ' ' }}\n\n\n\n"
         parsedText = "$parsedText${pageString.trim { it <= ' ' }}"
         pagePositionsList.add(parsedText.length) // This will the position of next page
+        callback.invoke(i, reader.numberOfPages)
     }
     reader.close()
     PdfBook(

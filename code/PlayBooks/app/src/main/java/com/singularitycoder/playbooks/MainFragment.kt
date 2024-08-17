@@ -820,6 +820,10 @@ class MainFragment : Fragment(), OnInitListener {
             .build()
         WorkManager.getInstance(requireContext()).enqueueUniqueWork(WorkerTag.PDF_TO_TEXT_CONVERTER, ExistingWorkPolicy.REPLACE, workRequest)
         WorkManager.getInstance(requireContext()).getWorkInfoByIdLiveData(workRequest.id).observe(viewLifecycleOwner) { workInfo: WorkInfo? ->
+            if (workInfo != null) {
+                val progress = workInfo.progress.getInt(WorkerData.KEY_PROGRESS, 0)
+                binding.tvProgress.text = progress.toString()
+            }
             when (workInfo?.state) {
                 WorkInfo.State.RUNNING -> showProgressBar(true)
                 WorkInfo.State.ENQUEUED -> showProgressBar(true)
@@ -847,6 +851,7 @@ class MainFragment : Fragment(), OnInitListener {
         CoroutineScope(Dispatchers.Main).launch {
             binding.progressCircular.isVisible = isShow
             binding.ivHeaderMore.isVisible = isShow.not()
+            binding.tvProgress.isVisible = isShow
         }
     }
 

@@ -3,6 +3,7 @@ package com.singularitycoder.playbooks
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import androidx.work.workDataOf
 import com.singularitycoder.playbooks.helpers.WorkerData
 import com.singularitycoder.playbooks.helpers.db.PlayBookDatabase
 import com.singularitycoder.playbooks.helpers.extension
@@ -20,6 +21,10 @@ import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.withContext
 import java.io.File
+
+/**
+ * For setting progress - https://developer.android.com/develop/background-work/background-tasks/persistent/how-to/observe
+ * */
 
 class PdfToTextWorker(val context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams) {
 
@@ -97,9 +102,13 @@ class PdfToTextWorker(val context: Context, workerParams: WorkerParameters) : Co
         )
     }
 
-    private fun File.toBookData(): BookData? {
+    private suspend fun File.toBookData(): BookData? {
         if (this.exists().not()) return null
-        val pdfBook = this.getTextFromPdf() // this must be added to new table with foreign key
+
+        // this must be added to new table with foreign key
+        val pdfBook = this.getTextFromPdf { progress: Int, totalPages: Int ->
+            setProgress(workDataOf(WorkerData.KEY_PROGRESS to ((progress * 100) / totalPages)))
+        }
 
         pdfBook ?: return null
         if (pdfBook.text.isNullOrBlank()) return null

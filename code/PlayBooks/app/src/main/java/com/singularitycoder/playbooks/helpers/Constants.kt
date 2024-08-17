@@ -77,6 +77,7 @@ object BottomSheetTag {
 
 object WorkerData {
     const val PDF_PATH = "WORKER_DATA_RSS_URL"
+    const val KEY_PROGRESS = "KEY_PROGRESS"
 }
 
 object WorkerTag {
