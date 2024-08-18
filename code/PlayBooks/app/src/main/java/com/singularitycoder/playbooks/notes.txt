@@ -41,6 +41,8 @@ https://www.sqlite.org/limits.html
 
 FOREGROUND SERVICE:--------------------------------------------------
 
+Work Manager based Foreground service - https://www.droidcon.com/2023/11/15/a-guide-to-using-foreground-services-and-background-work-in-android-14/
+
 https://developer.android.com/develop/background-work/services/foreground-services
 https://developer.android.com/about/versions/14/changes/fgs-types-required#media
 https://github.com/landomen/ForegroundService14Sample
@@ -50,6 +52,9 @@ https://github.com/szelinskip/MusicPlayer
 Grant Notification permission
 If you want the notification non-dismissable by the user, pass true into the setOngoing() method when you create your notification using Notification.Builder.
 
+https://developer.android.com/guide/topics/ui/notifiers/notifications?hl=en#Actions
+https://d.android.com/r/studio-ui/designer/material/notifications-behavior
+https://developer.android.com/guide/topics/ui/notifiers/notifications?hl=en
 
 TTS:--------------------------------------------------
 

@@ -13,6 +13,7 @@ import androidx.annotation.IntegerRes
 import androidx.core.app.NotificationCompat
 import com.singularitycoder.playbooks.MainActivity
 import com.singularitycoder.playbooks.R
+import com.singularitycoder.playbooks.ThisBroadcastReceiver
 
 internal object NotificationsHelper {
 
@@ -43,19 +44,22 @@ internal object NotificationsHelper {
 //            .build()
 //    }
 
-    private var notificationLayout: RemoteViews? = null
+    private var notificationLayoutExpanded: RemoteViews? = null
 
     fun createNotificationLayout(context: Context) {
         /** RemoteViews only accepts old layouts like Linear, Relative, etc. It cannot render constraintLayout
-         * https://stackoverflow.com/questions/45396426/crash-when-using-constraintlayout-in-notification */
-        notificationLayout = RemoteViews(context.packageName, R.layout.custom_service_notification)
+         * https://developer.android.com/develop/ui/views/notifications/build-notification
+         * https://stackoverflow.com/questions/45396426/crash-when-using-constraintlayout-in-notification
+         * https://developer.android.com/develop/ui/views/notifications/custom-notification */
+        notificationLayoutExpanded = RemoteViews(context.packageName, R.layout.custom_service_notification)
 
         fun setPendingIntent(
             notificationAction: NotificationAction,
             @IntegerRes viewId: Int
-        ) {
-            val intent = Intent(IntentKey.NOTIFICATION_BUTTON_CLICK_BROADCAST).apply {
-                putExtra(IntentExtraKey.NOTIFICATION_BUTTON_CLICK_TYPE, notificationAction)
+        ): PendingIntent {
+            val intent = Intent(context, ThisBroadcastReceiver::class.java).apply {
+                action = IntentKey.NOTIFICATION_BUTTON_CLICK_BROADCAST
+                putExtra(IntentExtraKey.NOTIFICATION_BUTTON_CLICK_TYPE, notificationAction.name)
             }
             val pendingIntent = PendingIntent.getBroadcast(
                 /* context = */ context,
@@ -63,7 +67,8 @@ internal object NotificationsHelper {
                 /* intent = */ intent,
                 /* flags = */ PendingIntent.FLAG_IMMUTABLE
             )
-            notificationLayout?.setOnClickPendingIntent(viewId, pendingIntent)
+            notificationLayoutExpanded?.setOnClickPendingIntent(viewId, pendingIntent)
+            return pendingIntent
         }
 
         setPendingIntent(notificationAction = NotificationAction.NEXT_PAGE, viewId = R.id.iv_next_page)
@@ -78,8 +83,8 @@ internal object NotificationsHelper {
         @DrawableRes playPauseResId: Int,
         title: String?
     ): Notification {
-        notificationLayout?.setTextViewText(R.id.tv_notification_track_title, title ?: "")
-        notificationLayout?.setImageViewResource(R.id.iv_play_pause, playPauseResId)
+        notificationLayoutExpanded?.setTextViewText(R.id.tv_notification_track_title, title ?: "")
+        notificationLayoutExpanded?.setImageViewResource(R.id.iv_play_pause, playPauseResId)
 
         val pendingIntent = PendingIntent.getActivity(
             /* context = */ context,
@@ -87,14 +92,25 @@ internal object NotificationsHelper {
             /* intent = */ Intent(context, MainActivity::class.java),
             /* flags = */ PendingIntent.FLAG_IMMUTABLE
         )
+//        val intent = Intent(IntentKey.NOTIFICATION_BUTTON_CLICK_BROADCAST).apply {
+//            putExtra(IntentExtraKey.NOTIFICATION_BUTTON_CLICK_TYPE, NotificationAction.PLAY_PAUSE)
+//        }
+//        val pendingIntentAction = PendingIntent.getBroadcast(
+//            /* context = */ context,
+//            /* requestCode = */ NotificationAction.PLAY_PAUSE.ordinal,
+//            /* intent = */ intent,
+//            /* flags = */ PendingIntent.FLAG_IMMUTABLE
+//        )
         val notification: Notification = NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setContentTitle("Book name playing from play books application")
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setStyle(NotificationCompat.DecoratedCustomViewStyle())
-            .setCustomContentView(notificationLayout)
+            .setCustomContentView(notificationLayoutExpanded)
+            .setCustomBigContentView(notificationLayoutExpanded)
 //            .setOngoing(true)
 //            .setContent(notificationLayout)
+//            .addAction(R.id.iv_play_pause, "play", pendingIntentAction)
             .setContentIntent(pendingIntent)
             .build()
 

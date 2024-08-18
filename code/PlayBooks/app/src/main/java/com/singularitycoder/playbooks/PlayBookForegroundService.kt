@@ -2,7 +2,6 @@ package com.singularitycoder.playbooks
 
 import android.annotation.SuppressLint
 import android.app.ForegroundServiceStartNotAllowedException
-import android.app.Notification
 import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -11,7 +10,6 @@ import android.content.IntentFilter
 import android.content.pm.ServiceInfo
 import android.media.AudioManager
 import android.os.Binder
-import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.speech.tts.TextToSpeech
@@ -19,6 +17,7 @@ import android.speech.tts.TextToSpeech.OnInitListener
 import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import androidx.core.app.ServiceCompat
+import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.singularitycoder.playbooks.helpers.IntentExtraKey
 import com.singularitycoder.playbooks.helpers.IntentExtraValue
@@ -74,40 +73,31 @@ class PlayBookForegroundService : Service(), OnInitListener {
 
     private val notificationButtonClickReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            val action = intent.getStringExtra(IntentExtraKey.NOTIFICATION_BUTTON_CLICK_TYPE)
-            when (action) {
+            if (intent.action != IntentKey.NOTIFICATION_BUTTON_CLICK_BROADCAST) return
+            val actionExtra = intent.getStringExtra(IntentExtraKey.NOTIFICATION_BUTTON_CLICK_TYPE)
+            when (actionExtra) {
                 NotificationAction.PLAY_PAUSE.name -> {
                     Log.d(TAG, "PLAY_PAUSE CLICK")
-                    showToast("PLAY_PAUSE")
-//                    playOrPauseTrack()
                     playPause(isPlay = true)
                 }
 
                 NotificationAction.PREVIOUS_SENTENCE.name -> {
                     Log.d(TAG, "PREVIOUS_SENTENCE CLICK")
-                    showToast("PREVIOUS_SENTENCE")
-//                    rewindTrack()
                     previousSentence()
                 }
 
                 NotificationAction.NEXT_SENTENCE.name -> {
                     Log.d(TAG, "NEXT_SENTENCE CLICK")
-                    showToast("NEXT_SENTENCE")
-//                    forwardTrack()
                     nextSentence()
                 }
 
                 NotificationAction.PREVIOUS_PAGE.name -> {
                     Log.d(TAG, "PREVIOUS_PAGE CLICK")
-                    showToast("PREVIOUS_PAGE")
-//                    close()
                     previousPage()
                 }
 
                 NotificationAction.NEXT_PAGE.name -> {
                     Log.d(TAG, "NEXT_PAGE CLICK")
-                    showToast("NEXT_PAGE")
-//                    close()
                     nextPage()
                 }
             }
@@ -119,18 +109,12 @@ class PlayBookForegroundService : Service(), OnInitListener {
     override fun onCreate() {
         super.onCreate()
         Log.d(TAG, "onCreate - First")
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(
-                /* receiver = */ notificationButtonClickReceiver,
-                /* filter = */ IntentFilter(IntentKey.NOTIFICATION_BUTTON_CLICK_BROADCAST),
-                /* flags = */ RECEIVER_NOT_EXPORTED
-            )
-        } else {
-            registerReceiver(
-                /* receiver = */ notificationButtonClickReceiver,
-                /* filter = */ IntentFilter(IntentKey.NOTIFICATION_BUTTON_CLICK_BROADCAST)
-            )
-        }
+        ContextCompat.registerReceiver(
+            /* context = */ this,
+            /* receiver = */ notificationButtonClickReceiver,
+            /* filter = */ IntentFilter(IntentKey.NOTIFICATION_BUTTON_CLICK_BROADCAST),
+            /* flags = */ ContextCompat.RECEIVER_NOT_EXPORTED
+        )
         localBroadcastManager = LocalBroadcastManager.getInstance(this)
         ttsParams.putString(TextToSpeech.Engine.KEY_PARAM_STREAM, AudioManager.STREAM_ALARM.toString())
         tts = TextToSpeech(/* context = */ this, /* listener = */ this)
@@ -214,7 +198,7 @@ class PlayBookForegroundService : Service(), OnInitListener {
     }
 
     private fun sendBroadcastToMain(key: String) {
-        val intent = Intent(IntentKey.MAIN_BROADCAST).apply {
+        val intent = Intent(IntentKey.MAIN_BROADCAST_FROM_SERVICE).apply {
             putExtra(IntentExtraKey.MESSAGE, key)
         }
         localBroadcastManager?.sendBroadcast(intent)

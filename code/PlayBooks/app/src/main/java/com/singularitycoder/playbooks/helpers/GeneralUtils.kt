@@ -13,6 +13,7 @@ import android.location.LocationManager
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
@@ -25,11 +26,13 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.os.bundleOf
 import androidx.core.text.HtmlCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.CoroutineScope
@@ -309,4 +312,18 @@ fun Context.shareImageAndTextViaApps(
         putExtra(Intent.EXTRA_TEXT, subtitle)
     }
     startActivity(Intent.createChooser(intent, intentTitle ?: "Share to..."))
+}
+
+
+fun Context.sendCustomBroadcast(
+    action: String?,
+    bundle: Bundle = bundleOf()
+) {
+    val intent = Intent(action).apply {
+        putExtras(bundle)
+    }
+    try {
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
+    } catch (_: Exception) {
+    }
 }

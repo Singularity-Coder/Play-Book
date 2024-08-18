@@ -26,7 +26,7 @@ enum class NotificationAction {
 
 object IntentKey {
     const val NOTIFICATION_BUTTON_CLICK_BROADCAST = "NOTIFICATION_BUTTON_CLICK_BROADCAST"
-    const val MAIN_BROADCAST = "MAIN_BROADCAST"
+    const val MAIN_BROADCAST_FROM_SERVICE = "MAIN_BROADCAST"
 }
 
 object IntentExtraKey {

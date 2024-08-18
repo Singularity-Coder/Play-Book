@@ -2,6 +2,7 @@ package com.singularitycoder.playbooks
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.WindowInsetsController
 import android.view.WindowManager
 import androidx.activity.enableEdgeToEdge
@@ -19,6 +20,10 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
+
+    companion object {
+        private val TAG = this::class.java.simpleName
+    }
 
 //    @Inject
 //    lateinit var connectMeDatabase: ConnectMeDatabase
@@ -51,23 +56,23 @@ class MainActivity : AppCompatActivity() {
         val action = intent.getStringExtra(IntentExtraKey.NOTIFICATION_BUTTON_CLICK_TYPE)
         when (action) {
             NotificationAction.PLAY_PAUSE.name -> {
-                showToast("PLAY_PAUSE")
+                Log.d(TAG, "PLAY_PAUSE")
             }
 
             NotificationAction.PREVIOUS_SENTENCE.name -> {
-                showToast("PREVIOUS_SENTENCE")
+                Log.d(TAG, "PREVIOUS_SENTENCE")
             }
 
             NotificationAction.NEXT_SENTENCE.name -> {
-                showToast("NEXT_SENTENCE")
+                Log.d(TAG, "NEXT_SENTENCE")
             }
 
             NotificationAction.PREVIOUS_PAGE.name -> {
-                showToast("PREVIOUS_PAGE")
+                Log.d(TAG, "PREVIOUS_PAGE")
             }
 
             NotificationAction.NEXT_PAGE.name -> {
-                showToast("NEXT_PAGE")
+                Log.d(TAG, "NEXT_PAGE")
             }
         }
     }

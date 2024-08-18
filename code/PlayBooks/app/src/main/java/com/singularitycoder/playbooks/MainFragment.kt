@@ -37,6 +37,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import coil.load
@@ -246,7 +247,7 @@ class MainFragment : Fragment(), OnInitListener {
     override fun onResume() {
         super.onResume()
         loadPdfs()
-        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(messageReceiver, IntentFilter(IntentKey.MAIN_BROADCAST))
+        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(messageReceiver, IntentFilter(IntentKey.MAIN_BROADCAST_FROM_SERVICE))
     }
 
     override fun onPause() {
@@ -294,8 +295,8 @@ class MainFragment : Fragment(), OnInitListener {
         bottomSheetBehavior = BottomSheetBehavior.from(binding.layoutPersistentBottomSheet.root)
 //        bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
         requireActivity().setNavigationBarColor(R.color.white)
-        rvDownloads.apply {
-            layoutAnimation = rvDownloads.context.layoutAnimationController(globalLayoutAnimation)
+        rvBooks.apply {
+            layoutAnimation = rvBooks.context.layoutAnimationController(globalLayoutAnimation)
             layoutManager = LinearLayoutManager(context)
             adapter = booksAdapter
         }
@@ -715,7 +716,7 @@ class MainFragment : Fragment(), OnInitListener {
 //            booksAdapter.notifyItemInserted(currentBookPosition)
 //            currentBookPosition++
 //            binding.nestedScrollView.scrollTo(0, 0)
-//            binding.rvDownloads.runLayoutAnimation(globalLayoutAnimation)
+//            binding.rvBooks.runLayoutAnimation(globalLayoutAnimation)
         }
     }
 
@@ -772,11 +773,11 @@ class MainFragment : Fragment(), OnInitListener {
             if (binding.progressCircular.isVisible) return
 
             setPermissionView(isShow = false)
-            binding.rvDownloads.isVisible = true
+            binding.rvBooks.isVisible = true
             convertPdfToTextInWorker()
         } else {
             setPermissionView(isShow = true)
-            binding.rvDownloads.isVisible = false
+            binding.rvBooks.isVisible = false
         }
     }
 
@@ -817,6 +818,7 @@ class MainFragment : Fragment(), OnInitListener {
         }.build()
         val workRequest = OneTimeWorkRequestBuilder<PdfToTextWorker>()
             .setInputData(data)
+            .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
             .build()
         WorkManager.getInstance(requireContext()).enqueueUniqueWork(WorkerTag.PDF_TO_TEXT_CONVERTER, ExistingWorkPolicy.REPLACE, workRequest)
         WorkManager.getInstance(requireContext()).getWorkInfoByIdLiveData(workRequest.id).observe(viewLifecycleOwner) { workInfo: WorkInfo? ->
