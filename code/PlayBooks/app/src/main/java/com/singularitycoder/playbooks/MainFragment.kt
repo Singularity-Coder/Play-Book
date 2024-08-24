@@ -535,8 +535,6 @@ class MainFragment : Fragment() {
 //        }
 
         layoutPersistentBottomSheet.layoutSliderPitch.apply {
-            val pitchScrubHandler = Handler(Looper.getMainLooper())
-            var pitchScrubRunnable: java.lang.Runnable = Runnable {}
             ibReduce.onSafeClick {
                 sliderCustom.progress -= 1
                 playBookForegroundService?.setTtsPitch(sliderCustom.progress.toFloat())
@@ -551,24 +549,20 @@ class MainFragment : Fragment() {
             }
             sliderCustom.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
-                    println("seekbar progress: $progress")
-                    tvValue.text = progress.toString()
-                    pitchScrubHandler.removeCallbacks(pitchScrubRunnable)
-                    pitchScrubRunnable = Runnable {
-                        playBookForegroundService?.setTtsPitch(progress.toFloat())
-                        playBookForegroundService?.stopAndPlayTts()
-                    }
-                    pitchScrubHandler.postDelayed(pitchScrubRunnable, 1000.milliSeconds())
+                    tvValue.text = seekBar.progress.toString()
                 }
 
                 override fun onStartTrackingTouch(seekBar: SeekBar) = Unit
-                override fun onStopTrackingTouch(seekBar: SeekBar) = Unit
+                override fun onStopTrackingTouch(seekBar: SeekBar) {
+                    println("seekbar progress: ${seekBar.progress}")
+                    tvValue.text = seekBar.progress.toString()
+                    playBookForegroundService?.setTtsPitch(seekBar.progress.toFloat())
+                    playBookForegroundService?.stopAndPlayTts()
+                }
             })
         }
 
         layoutPersistentBottomSheet.layoutSliderSpeed.apply {
-            val speechRateScrubHandler = Handler(Looper.getMainLooper())
-            var speechRateScrubRunnable: java.lang.Runnable = Runnable {}
             ibReduce.onSafeClick {
                 sliderCustom.progress -= 1
                 playBookForegroundService?.setTtsSpeechRate(sliderCustom.progress.toFloat())
@@ -583,45 +577,38 @@ class MainFragment : Fragment() {
             }
             sliderCustom.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
-                    println("seekbar progress: $progress")
-                    tvValue.text = progress.toString()
-                    speechRateScrubHandler.removeCallbacks(speechRateScrubRunnable)
-                    speechRateScrubRunnable = Runnable {
-                        playBookForegroundService?.setTtsSpeechRate(progress.toFloat())
-                        playBookForegroundService?.stopAndPlayTts()
-                    }
-                    speechRateScrubHandler.postDelayed(speechRateScrubRunnable, 1000.milliSeconds())
+                    tvValue.text = seekBar.progress.toString()
                 }
 
                 override fun onStartTrackingTouch(seekBar: SeekBar) = Unit
-                override fun onStopTrackingTouch(seekBar: SeekBar) = Unit
+                override fun onStopTrackingTouch(seekBar: SeekBar) {
+                    println("seekbar progress: ${seekBar.progress}")
+                    tvValue.text = seekBar.progress.toString()
+                    playBookForegroundService?.setTtsSpeechRate(seekBar.progress.toFloat())
+                    playBookForegroundService?.stopAndPlayTts()
+                }
             })
         }
 
         layoutPersistentBottomSheet.layoutSliderPlayback.apply {
             var oldProgress = 0
-            val pageScrubHandler = Handler(Looper.getMainLooper())
-            var pageScrubRunnable: java.lang.Runnable = Runnable {}
             sliderCustom.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
-                    println("seekbar progress: $progress")
-                    tvValue.text = "${progress}/${playBookForegroundService?.getCurrentPlayingBook()?.pageCount}"
-                    pageScrubHandler.removeCallbacks(pageScrubRunnable)
-                    pageScrubRunnable = Runnable {
-                        if (progress > oldProgress) {
-                            playBookForegroundService?.nextPage(pagePosition = progress)
-                        } else {
-                            playBookForegroundService?.previousPage(pagePosition = progress)
-                        }
-                    }
-                    pageScrubHandler.postDelayed(pageScrubRunnable, 1000.milliSeconds())
-                    oldProgress = progress
-//                    Log.d(TAG, progress.toString())
-//                    Log.d(TAG, oldProgress.toString())
+                    tvValue.text = "${seekBar.progress}/${playBookForegroundService?.getCurrentPlayingBook()?.pageCount}"
                 }
-
                 override fun onStartTrackingTouch(seekBar: SeekBar) = Unit
-                override fun onStopTrackingTouch(seekBar: SeekBar) = Unit
+                override fun onStopTrackingTouch(seekBar: SeekBar) {
+                    println("seekbar progress: ${seekBar.progress}")
+                    tvValue.text = "${seekBar.progress}/${playBookForegroundService?.getCurrentPlayingBook()?.pageCount}"
+                    if (seekBar.progress > oldProgress) {
+                        playBookForegroundService?.nextPage(pagePosition = seekBar.progress)
+                    } else {
+                        playBookForegroundService?.previousPage(pagePosition = seekBar.progress)
+                    }
+                    oldProgress = seekBar.progress
+                    Log.d(TAG, seekBar.progress.toString())
+                    Log.d(TAG, oldProgress.toString())
+                }
             })
         }
 
