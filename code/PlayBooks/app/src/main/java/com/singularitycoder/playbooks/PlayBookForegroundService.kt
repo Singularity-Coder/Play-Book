@@ -18,12 +18,12 @@ import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import androidx.core.app.ServiceCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.singularitycoder.playbooks.helpers.AppPreferences
 import com.singularitycoder.playbooks.helpers.IntentExtraKey
 import com.singularitycoder.playbooks.helpers.IntentExtraValue
 import com.singularitycoder.playbooks.helpers.IntentKey
 import com.singularitycoder.playbooks.helpers.NotificationAction
 import com.singularitycoder.playbooks.helpers.NotificationsHelper
-import com.singularitycoder.playbooks.helpers.TtsConstants
 import com.singularitycoder.playbooks.helpers.TtsTag
 import com.singularitycoder.playbooks.helpers.db.PlayBookDatabase
 import com.singularitycoder.playbooks.helpers.getBookCoversFileDir
@@ -53,7 +53,7 @@ class PlayBookForegroundService : Service() {
 
     private var tts: TextToSpeech? = null
 
-    private val availableLanguages = mutableListOf<Locale>()
+    private val availableLanguages = mutableSetOf<Locale>()
 
     private val binder = LocalBinder()
 
@@ -149,14 +149,15 @@ class PlayBookForegroundService : Service() {
     private fun doWhenTtsIsReady() {
         print("Text-To-Speech engine is ready.")
 
+        availableLanguages.add(Locale.getDefault())
         tts?.availableLanguages?.forEach { locale: Locale ->
             if (tts?.isLanguageAvailable(locale) == TextToSpeech.LANG_AVAILABLE) {
                 availableLanguages.add(locale)
             }
         }
-        tts?.setLanguage(Locale.US)
-        setTtsPitch(TtsConstants.DEFAULT.toFloat())
-        setTtsSpeechRate(TtsConstants.DEFAULT.toFloat())
+        tts?.setLanguage(availableLanguages.find { it.displayName == AppPreferences.getInstance().ttsLanguage })
+        setTtsPitch(AppPreferences.getInstance().ttsPitch.toFloat())
+        setTtsSpeechRate(AppPreferences.getInstance().ttsSpeechRate.toFloat())
 
         // setOnUtteranceProgressListener must be set after tts is init
         // https://stackoverflow.com/questions/52233235/setonutteranceprogresslistener-not-at-all-working-for-text-to-speech-for-api-2
@@ -460,7 +461,7 @@ class PlayBookForegroundService : Service() {
         )
     }
 
-    fun getAvailableTtsLanguages(): List<Locale> = availableLanguages
+    fun getAvailableTtsLanguages(): Set<Locale> = availableLanguages
 
     fun getCurrentPlayingBook(): Book? = currentPlayingBook
 

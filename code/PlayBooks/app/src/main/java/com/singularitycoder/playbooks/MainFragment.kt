@@ -13,9 +13,7 @@ import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
 import android.os.IBinder
-import android.os.Looper
 import android.speech.tts.TextToSpeech
 import android.text.Editable
 import android.text.Spannable
@@ -51,6 +49,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetBehavior.BottomSheetCallback
 import com.google.android.material.card.MaterialCardView
 import com.singularitycoder.playbooks.databinding.FragmentMainBinding
+import com.singularitycoder.playbooks.helpers.AppPreferences
 import com.singularitycoder.playbooks.helpers.FILE_PROVIDER
 import com.singularitycoder.playbooks.helpers.IntentExtraKey
 import com.singularitycoder.playbooks.helpers.IntentExtraValue
@@ -73,7 +72,6 @@ import com.singularitycoder.playbooks.helpers.hasPdfs
 import com.singularitycoder.playbooks.helpers.hasStoragePermission
 import com.singularitycoder.playbooks.helpers.hideKeyboard
 import com.singularitycoder.playbooks.helpers.layoutAnimationController
-import com.singularitycoder.playbooks.helpers.milliSeconds
 import com.singularitycoder.playbooks.helpers.onImeClick
 import com.singularitycoder.playbooks.helpers.onSafeClick
 import com.singularitycoder.playbooks.helpers.requestStoragePermission
@@ -90,7 +88,6 @@ import com.singularitycoder.playbooks.helpers.showTtsSettings
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -123,7 +120,7 @@ class MainFragment : Fragment() {
 
     private var isTtsPresent = false
 
-    private var selectedTtsLanguage: Locale? = Locale.getDefault()
+    private var selectedTtsLanguage: String? = Locale.getDefault().displayName
 
     private val bookViewModel by viewModels<BookViewModel>()
 
@@ -301,22 +298,23 @@ class MainFragment : Fragment() {
         layoutSearch.etSearch.hint = "Search in ${getDownloadDirectory().name}"
         setUpPersistentBottomSheet()
         checkTtsExists()
+        selectedTtsLanguage = AppPreferences.getInstance().ttsLanguage
         layoutPersistentBottomSheet.layoutSliderPlayback.apply {
             tvSliderTitle.text = "Page"
         }
         layoutPersistentBottomSheet.layoutSliderSpeed.apply {
             tvSliderTitle.text = "Speed"
-            tvValue.text = TtsConstants.DEFAULT.toString()
+            tvValue.text = AppPreferences.getInstance().ttsSpeechRate.toString()
             sliderCustom.min = TtsConstants.MIN
             sliderCustom.max = TtsConstants.MAX
-            sliderCustom.progress = TtsConstants.DEFAULT
+            sliderCustom.progress = AppPreferences.getInstance().ttsSpeechRate
         }
         layoutPersistentBottomSheet.layoutSliderPitch.apply {
             tvSliderTitle.text = "Pitch"
-            tvValue.text = TtsConstants.DEFAULT.toString()
+            tvValue.text = AppPreferences.getInstance().ttsPitch.toString()
             sliderCustom.min = TtsConstants.MIN
             sliderCustom.max = TtsConstants.MAX
-            sliderCustom.progress = TtsConstants.DEFAULT
+            sliderCustom.progress = AppPreferences.getInstance().ttsPitch
         }
     }
 
@@ -540,12 +538,14 @@ class MainFragment : Fragment() {
                 playBookForegroundService?.setTtsPitch(sliderCustom.progress.toFloat())
                 tvValue.text = sliderCustom.progress.toString()
                 playBookForegroundService?.stopAndPlayTts()
+                AppPreferences.getInstance().ttsPitch = sliderCustom.progress
             }
             ibIncrease.onSafeClick {
                 sliderCustom.progress += 1
                 playBookForegroundService?.setTtsPitch(sliderCustom.progress.toFloat())
                 tvValue.text = sliderCustom.progress.toString()
                 playBookForegroundService?.stopAndPlayTts()
+                AppPreferences.getInstance().ttsPitch = sliderCustom.progress
             }
             sliderCustom.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
@@ -558,6 +558,7 @@ class MainFragment : Fragment() {
                     tvValue.text = seekBar.progress.toString()
                     playBookForegroundService?.setTtsPitch(seekBar.progress.toFloat())
                     playBookForegroundService?.stopAndPlayTts()
+                    AppPreferences.getInstance().ttsPitch = seekBar.progress
                 }
             })
         }
@@ -568,12 +569,14 @@ class MainFragment : Fragment() {
                 playBookForegroundService?.setTtsSpeechRate(sliderCustom.progress.toFloat())
                 tvValue.text = sliderCustom.progress.toString()
                 playBookForegroundService?.stopAndPlayTts()
+                AppPreferences.getInstance().ttsSpeechRate = sliderCustom.progress
             }
             ibIncrease.onSafeClick {
                 sliderCustom.progress += 1
                 playBookForegroundService?.setTtsSpeechRate(sliderCustom.progress.toFloat())
                 tvValue.text = sliderCustom.progress.toString()
                 playBookForegroundService?.stopAndPlayTts()
+                AppPreferences.getInstance().ttsSpeechRate = sliderCustom.progress
             }
             sliderCustom.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
@@ -586,6 +589,7 @@ class MainFragment : Fragment() {
                     tvValue.text = seekBar.progress.toString()
                     playBookForegroundService?.setTtsSpeechRate(seekBar.progress.toFloat())
                     playBookForegroundService?.stopAndPlayTts()
+                    AppPreferences.getInstance().ttsSpeechRate = seekBar.progress
                 }
             })
         }
@@ -596,6 +600,7 @@ class MainFragment : Fragment() {
                 override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
                     tvValue.text = "${seekBar.progress}/${playBookForegroundService?.getCurrentPlayingBook()?.pageCount}"
                 }
+
                 override fun onStartTrackingTouch(seekBar: SeekBar) = Unit
                 override fun onStopTrackingTouch(seekBar: SeekBar) {
                     println("seekbar progress: ${seekBar.progress}")
@@ -639,9 +644,6 @@ class MainFragment : Fragment() {
         }
 
         layoutPersistentBottomSheet.ivHeaderMore.setOnClickListener { view: View? ->
-            val ttsLanguageList = playBookForegroundService?.getAvailableTtsLanguages()?.map {
-                Pair(it.displayName, R.drawable.round_check_24)
-            } ?: emptyList()
             val optionsList = listOf(
                 Pair("Copy Sentence", R.drawable.baseline_content_copy_24),
                 Pair("Select Language", R.drawable.round_language_24),
@@ -662,16 +664,21 @@ class MainFragment : Fragment() {
                     }
 
                     optionsList[1].first -> {
+                        val ttsLanguages = playBookForegroundService?.getAvailableTtsLanguages()?.toList()
+                        val ttsLangMenuList = ttsLanguages?.map {
+                            Pair(it.displayName, R.drawable.round_check_24)
+                        } ?: emptyList()
                         requireContext().showSingleSelectionPopupMenu(
                             view = layoutPersistentBottomSheet.ivHeaderMore,
                             title = "Select Language",
-                            selectedOption = selectedTtsLanguage?.displayName,
-                            menuList = ttsLanguageList,
+                            selectedOption = selectedTtsLanguage,
+                            menuList = ttsLangMenuList,
                         ) { menuItem: MenuItem? ->
-                            val selectedLangIndex = ttsLanguageList.indexOfFirst { it.first == (menuItem?.title?.toString()?.trim() ?: "") }
-                            selectedTtsLanguage = playBookForegroundService?.getAvailableTtsLanguages()?.get(selectedLangIndex)
-                            playBookForegroundService?.setTtsLanguage(selectedTtsLanguage ?: Locale.getDefault())
+                            val selectedLangIndex = ttsLanguages?.indexOfFirst { it.displayName == (menuItem?.title?.toString()?.trim() ?: "") } ?: 0
+                            selectedTtsLanguage = ttsLanguages?.get(selectedLangIndex)?.displayName ?: Locale.getDefault().displayName
+                            playBookForegroundService?.setTtsLanguage(ttsLanguages?.get(selectedLangIndex) ?: Locale.getDefault())
                             playBookForegroundService?.stopAndPlayTts()
+                            AppPreferences.getInstance().ttsLanguage = selectedTtsLanguage ?: Locale.getDefault().displayName
                         }
                     }
 
@@ -710,7 +717,7 @@ class MainFragment : Fragment() {
         playBookForegroundService?.setTtsPitch(TtsConstants.DEFAULT.toFloat())
         playBookForegroundService?.setTtsSpeechRate(TtsConstants.DEFAULT.toFloat())
         playBookForegroundService?.setTtsLanguage(Locale.getDefault())
-        selectedTtsLanguage = Locale.getDefault()
+        selectedTtsLanguage = Locale.getDefault().displayName
         playBookForegroundService?.stopAndPlayTts()
     }
 

@@ -3,6 +3,7 @@ package com.singularitycoder.playbooks.helpers
 import android.content.Context
 import androidx.core.content.edit
 import androidx.preference.PreferenceManager
+import java.util.Locale
 
 // https://github.com/enricocid/Music-Player-GO
 class AppPreferences(context: Context) {
@@ -29,19 +30,15 @@ class AppPreferences(context: Context) {
 
     private val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
 
-    var latestVolume: Int
-        get() = sharedPreferences.getInt("latest_volume_pref", 100)
-        set(value) = sharedPreferences.edit { putInt("latest_volume_pref", value) }
+    var ttsSpeechRate: Int
+        get() = sharedPreferences.getInt("TTS_SPEECH_RATE_PREF", TtsConstants.DEFAULT)
+        set(value) = sharedPreferences.edit { putInt("TTS_SPEECH_RATE_PREF", value) }
 
-    var ttsSpeechRate: Float
-        get() = sharedPreferences.getFloat("TTS_SPEECH_RATE_PREF", 1.0F)
-        set(value) = sharedPreferences.edit { putFloat("TTS_SPEECH_RATE_PREF", value) }
-
-    var ttsPitch: Float
-        get() = sharedPreferences.getFloat("TTS_PITCH_PREF", 1.0F)
-        set(value) = sharedPreferences.edit { putFloat("TTS_PITCH_PREF", value) }
+    var ttsPitch: Int
+        get() = sharedPreferences.getInt("TTS_PITCH_PREF", TtsConstants.DEFAULT)
+        set(value) = sharedPreferences.edit { putInt("TTS_PITCH_PREF", value) }
 
     var ttsLanguage: String
-        get() = sharedPreferences.getString("TTS_LANGUAGE", "") ?: ""
+        get() = sharedPreferences.getString("TTS_LANGUAGE", Locale.getDefault().displayName) ?: Locale.getDefault().displayName
         set(value) = sharedPreferences.edit { putString("TTS_LANGUAGE", value) }
 }
