@@ -11,11 +11,11 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.singularitycoder.playbooks.databinding.ActivityMainBinding
+import com.singularitycoder.playbooks.helpers.AppPreferences
 import com.singularitycoder.playbooks.helpers.FragmentsTag
 import com.singularitycoder.playbooks.helpers.IntentExtraKey
 import com.singularitycoder.playbooks.helpers.NotificationAction
 import com.singularitycoder.playbooks.helpers.showScreen
-import com.singularitycoder.playbooks.helpers.showToast
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -43,6 +43,8 @@ class MainActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+
+        AppPreferences.init(this)
         showScreen(
             fragment = MainFragment.newInstance(""),
             tag = FragmentsTag.MAIN,
@@ -53,7 +55,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        val action = intent.getStringExtra(IntentExtraKey.NOTIFICATION_BUTTON_CLICK_TYPE)
+        val action = intent.getStringExtra(IntentExtraKey.NOTIF_BTN_CLICK_TYPE)
         when (action) {
             NotificationAction.PLAY_PAUSE.name -> {
                 Log.d(TAG, "PLAY_PAUSE")

@@ -13,6 +13,6 @@ data class BookData(
     var path: String? = "",
     var text: String? = "",
     var pageCount: Int = 0,
-    var pagePositionsList: List<Int>,
+    var periodCountPerPageList: List<Int>,
     var periodPositionsList: List<Int>
 ) : Parcelable

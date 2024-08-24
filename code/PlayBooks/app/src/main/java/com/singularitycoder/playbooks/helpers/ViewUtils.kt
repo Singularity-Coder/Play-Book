@@ -40,7 +40,6 @@ import com.singularitycoder.playbooks.R
 import java.lang.reflect.Method
 import java.util.*
 
-
 // underline text programatically
 fun TextView.strike() {
     paintFlags = paintFlags or Paint.UNDERLINE_TEXT_FLAG

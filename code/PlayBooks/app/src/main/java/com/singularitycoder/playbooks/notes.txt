@@ -1,43 +1,32 @@
+TODO FEATURES:--------------------------------------------------
+
+page slider
+on app killed tts is playing but on restart its resetting
+store speech rate, pitch, language, current read page positions in shared prefs
+Show instructions on how to convert ebook formats to pdf online
+Skip book option in loader to skip books that take too long to convert
+
+https://developer.android.com/training/data-storage/shared/media
 
 EDGE CASES:--------------------------------------------------
+
 1. Calls
 2. Headphone disconnect
 3. Service gets killed on low battery maybe
 
 
-FEATURES:--------------------------------------------------
-
-1. Notification - clicks -> pending intent to foregroudn service -> intent to main frag to update player
-2. Player - clicks -> send to foreground service -> update notification
-3. Pdf preview images must be stored in internal files during book creation to avoid generating bitmaps on the fly in recycler adapter
-4. Send only the currently playing sentence to player screen for display
-5. Highlight spoken word in the sentence in player
-
-Run a background worker converting all pdf to text and store books in db
-Before storing text in db, trim all new line characters and unreadable ASCII code
-
-DB - Book - position of periods, chapters, sentences
-Use foreground service for player
-First get files from file man, then in worker convert pdfs to text n insert text to db, from db listen to db inserts and in observer load list in view
-Show instructions on how to convert ebook formats to pdf online
-
-This pdf to text converter will face problems with programming books. Skip book conversion after 2 mins. maintain timer.
-
-
 SQLITE LIMITATIONS:--------------------------------------------------
 
-https://stackoverflow.com/questions/58425372/android-room-database-size#:~:text=The%20maximum%20size%20of%20a,140%2C000%20gigabytes%20or%20128%2C000%20gibibytes).
-
-Maximum length of a string or BLOB Default size is 1 GB Max size is 2.147483647
-Maximum Number Of Columns Default size is 2000 Max size is 32767
-Maximum Length Of An SQL Statement Default size is 1 MB Max size is 1.073741824
-Maximum Number Of Tables In A Join Default is 64 tables
-Maximum Number Of Attached Databases Default is 10 Max size is 125
-Maximum Number Of Rows In A Table Max Size is 18446744073.709552765
-Maximum Database Size 140 tb but it will depends on your device disk size.
-
 https://www.sqlite.org/limits.html
+https://stackoverflow.com/questions/58425372/android-room-database-size
 
+Length of a string or BLOB Default size is 1 GB, Max size is 2.147483647
+Number Of Columns Default size is 2000, Max size is 32767
+Length Of An SQL Statement Default size is 1 MB, Max size is 1.073741824
+Max number Of Tables In A Join Default is 64 tables
+Number Of Attached Databases Default is 10, Max size is 125
+Number Of Rows In A Table Max Size is 18446744073.709552765
+Max Database Size 140 tb but it will depends on your device disk size.
 
 FOREGROUND SERVICE:--------------------------------------------------
 
@@ -45,16 +34,14 @@ Work Manager based Foreground service - https://www.droidcon.com/2023/11/15/a-gu
 
 https://developer.android.com/develop/background-work/services/foreground-services
 https://developer.android.com/about/versions/14/changes/fgs-types-required#media
-https://github.com/landomen/ForegroundService14Sample
+https://medium.com/@domen.lanisnik/guide-to-foreground-services-on-android-9d0127dc8f9a
 https://medium.com/@sarafanshul/jni-101-introduction-to-java-native-interface-8a1256ca4d8e
 https://github.com/szelinskip/MusicPlayer
+https://medium.com/degoo/android-creating-a-custom-notification-layout-with-an-image-or-photo-bd282637a04e
+https://developer.android.com/develop/ui/views/notifications/build-notification#Actions
 
 Grant Notification permission
 If you want the notification non-dismissable by the user, pass true into the setOngoing() method when you create your notification using Notification.Builder.
-
-https://developer.android.com/guide/topics/ui/notifiers/notifications?hl=en#Actions
-https://d.android.com/r/studio-ui/designer/material/notifications-behavior
-https://developer.android.com/guide/topics/ui/notifiers/notifications?hl=en
 
 TTS:--------------------------------------------------
 
@@ -62,6 +49,8 @@ https://android.googlesource.com/platform/frameworks/base/+/master/core/java/and
 https://developer.android.com/reference/android/speech/tts/TextToSpeech
 
 Max speech input is 4000 - get max length from TextToSpeech.getMaxSpeechInputLength() as per AOSP source
+TTS pitch value varies from 25 to 400, where 100 is the value for normal * pitch. The max pitch value is set to 400
+Speech rate. 1.0 is the normal speech rate, lower values slow down the speech (0.5 is half the normal speech rate), greater values accelerate it (2.0 is twice the normal speech rate).
 
 https://android-developers.googleblog.com/2009/09/introduction-to-text-to-speech-in.html
 

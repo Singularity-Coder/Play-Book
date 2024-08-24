@@ -6,7 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
-import com.singularitycoder.playbooks.databinding.ListItemDownloadBinding
+import com.singularitycoder.playbooks.databinding.ListItemBookBinding
 import com.singularitycoder.playbooks.helpers.deviceHeight
 import com.singularitycoder.playbooks.helpers.deviceWidth
 import com.singularitycoder.playbooks.helpers.getBookCoversFileDir
@@ -21,7 +21,7 @@ class DownloadsAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private var itemLongClickListener: (book: Book?, view: View?, position: Int?) -> Unit = { _, _, _ -> }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        val itemBinding = ListItemDownloadBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val itemBinding = ListItemBookBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return ThisViewHolder(itemBinding)
     }
 
@@ -48,13 +48,21 @@ class DownloadsAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     }
 
     inner class ThisViewHolder(
-        private val itemBinding: ListItemDownloadBinding,
+        private val itemBinding: ListItemBookBinding,
     ) : RecyclerView.ViewHolder(itemBinding.root) {
         @SuppressLint("SetJavaScriptEnabled")
         fun setData(book: Book?) {
             itemBinding.apply {
-                cardImage.layoutParams.height = deviceHeight() / 6
-                cardImage.layoutParams.width = deviceWidth() / 4
+                itemBinding.root.animate().run {
+                    withStartAction {
+                        // make views visble or not
+                    }
+                    duration = 750
+                    alpha(1.0F) // set default layout alpha to 0. So transition from alpha 0 to 1
+                    withEndAction {}
+                }
+                ivItemImage.layoutParams.height = deviceHeight() / 6
+                ivItemImage.layoutParams.width = deviceWidth() / 4
                 val bookCover = File(
                     /* parent = */ itemBinding.root.context.getBookCoversFileDir(),
                     /* child = */ "${book?.id}.jpg"

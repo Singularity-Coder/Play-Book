@@ -28,6 +28,7 @@
         android:text="0"
         android:textAppearance="@style/TextAppearance.AppCompat.Body1"
         android:textColor="@color/md_indigo_100"
+        android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="@+id/tv_slider_title"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/tv_slider_title" />

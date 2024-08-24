@@ -6,6 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_weight="0"
+    android:clickable="false"
     app:behavior_hideable="false"
     app:behavior_peekHeight="60dp"
     app:behavior_skipCollapsed="false"
@@ -45,12 +46,27 @@
                 app:layout_constraintTop_toTopOf="parent"
                 app:tint="@color/white" />
 
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/iv_header_image"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginTop="8dp"
+                android:background="@color/purple_50"
+                android:scaleType="centerCrop"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:shapeAppearanceOverlay="@style/CustomRoundedImageView"
+                app:strokeColor="@color/black_50"
+                app:strokeWidth="0dp" />
+
             <TextView
                 android:id="@+id/tv_header"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:layout_marginEnd="8dp"
+                android:layout_marginStart="8dp"
                 android:drawablePadding="16dp"
                 android:drawableTint="@color/white"
                 android:ellipsize="end"
@@ -62,7 +78,7 @@
                 android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/cl_header_icon"
-                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/iv_header_image"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <androidx.constraintlayout.widget.ConstraintLayout
@@ -124,16 +140,21 @@
                     app:layout_constraintTop_toTopOf="parent"
                     app:strokeWidth="0dp">
 
-                    <TextView
-                        android:id="@+id/tv_currently_reading"
+                    <androidx.constraintlayout.widget.ConstraintLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:layout_margin="16dp"
-                        android:ellipsize="end"
-                        android:fontFamily="sans-serif-light"
-                        android:text="@string/lorem_ipsum"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
-                        android:textColor="@color/purple_700" />
+                        android:layout_margin="16dp">
+
+                        <TextView
+                            android:id="@+id/tv_currently_reading"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:ellipsize="end"
+                            android:text="@string/lorem_ipsum"
+                            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+                            android:textColor="@color/purple_700" />
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
                 </com.google.android.material.card.MaterialCardView>
 
                 <!--                <TextView-->

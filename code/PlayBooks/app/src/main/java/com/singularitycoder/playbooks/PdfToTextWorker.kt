@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import com.itextpdf.text.pdf.PdfReader
+import com.itextpdf.text.pdf.parser.PdfTextExtractor
 import com.singularitycoder.playbooks.helpers.WorkerData
 import com.singularitycoder.playbooks.helpers.db.PlayBookDatabase
 import com.singularitycoder.playbooks.helpers.extension
@@ -12,7 +14,6 @@ import com.singularitycoder.playbooks.helpers.getBookCoversFileDir
 import com.singularitycoder.playbooks.helpers.getBookId
 import com.singularitycoder.playbooks.helpers.getDownloadDirectory
 import com.singularitycoder.playbooks.helpers.getFilesListFrom
-import com.singularitycoder.playbooks.helpers.getTextFromPdf
 import com.singularitycoder.playbooks.helpers.saveToStorage
 import com.singularitycoder.playbooks.helpers.sizeInBytes
 import com.singularitycoder.playbooks.helpers.toPdfFirstPageBitmap
@@ -121,7 +122,7 @@ class PdfToTextWorker(val context: Context, workerParams: WorkerParameters) : Co
 
         pdfBook ?: return null
         if (pdfBook.text.isNullOrBlank()) return null
-        if (pdfBook.pagePositionsList.sum() == 0) return null
+        if (pdfBook.periodCountPerPageList.sum() == 0) return null
         if (pdfBook.periodPositionsList.sum() == 0) return null
 
         pageCount = pdfBook.pageCount
@@ -130,8 +131,41 @@ class PdfToTextWorker(val context: Context, workerParams: WorkerParameters) : Co
             path = this.absolutePath,
             text = pdfBook.text,
             pageCount = pdfBook.pageCount,
-            pagePositionsList = pdfBook.pagePositionsList,
+            periodCountPerPageList = pdfBook.periodCountPerPageList,
             periodPositionsList = pdfBook.periodPositionsList
         )
+    }
+
+    // https://stackoverflow.com/questions/58750885/how-can-i-convert-pdf-file-to-text
+    private suspend fun File.getTextFromPdf(
+        callback: suspend (progress: Int, totalPages: Int) -> Unit
+    ): PdfBook? = try {
+        var parsedText = ""
+        val periodCountPerPageList = mutableListOf<Int>()
+        val periodPositionsList = mutableListOf<Int>()
+        val reader = PdfReader(this.absolutePath)
+        for (i in 0 until reader.numberOfPages) {
+            val pageString = PdfTextExtractor.getTextFromPage(reader, i + 1)
+            var periodCountPerPage = 0
+            pageString.forEachIndexed { index, char ->
+                if (char == '.') {
+                    periodCountPerPage++
+                    periodPositionsList.add(parsedText.length + index)
+                }
+            }
+            // Extracting the content from different pages - add new lines if necessary - "$parsedText${pageString.trim { it <= ' ' }}\n\n\n\n"
+            parsedText = "$parsedText${pageString.trim { it <= ' ' }}"
+            periodCountPerPageList.add(periodCountPerPage) // option 1: This will the position of next page. Take last period position of each page
+            callback.invoke(i, reader.numberOfPages)
+        }
+        reader.close()
+        PdfBook(
+            pageCount = reader.numberOfPages,
+            text = parsedText.replace("\n", " "),
+            periodCountPerPageList = periodCountPerPageList,
+            periodPositionsList = periodPositionsList
+        )
+    } catch (_: Exception) {
+        null
     }
 }

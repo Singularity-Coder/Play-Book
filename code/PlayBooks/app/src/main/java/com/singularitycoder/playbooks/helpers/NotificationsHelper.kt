@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.widget.RemoteViews
 import androidx.annotation.DrawableRes
 import androidx.annotation.IntegerRes
@@ -29,6 +30,7 @@ internal object NotificationsHelper {
             context.getString(R.string.foreground_service_sample_notification_channel_general_name),
             NotificationManager.IMPORTANCE_DEFAULT
         )
+//        channel.setSound(null, null)
         notificationManager.createNotificationChannel(channel)
     }
 
@@ -44,22 +46,24 @@ internal object NotificationsHelper {
 //            .build()
 //    }
 
-    private var notificationLayoutExpanded: RemoteViews? = null
+    private var notificationLayoutBig: RemoteViews? = null
+    private var notificationLayoutSmall: RemoteViews? = null
 
     fun createNotificationLayout(context: Context) {
         /** RemoteViews only accepts old layouts like Linear, Relative, etc. It cannot render constraintLayout
          * https://developer.android.com/develop/ui/views/notifications/build-notification
          * https://stackoverflow.com/questions/45396426/crash-when-using-constraintlayout-in-notification
          * https://developer.android.com/develop/ui/views/notifications/custom-notification */
-        notificationLayoutExpanded = RemoteViews(context.packageName, R.layout.custom_service_notification)
+        notificationLayoutBig = RemoteViews(context.packageName, R.layout.custom_service_notification_large)
+        notificationLayoutSmall = RemoteViews(context.packageName, R.layout.custom_service_notification_small)
 
-        fun setPendingIntent(
+        fun setPendingIntentBigNotif(
             notificationAction: NotificationAction,
             @IntegerRes viewId: Int
         ): PendingIntent {
             val intent = Intent(context, ThisBroadcastReceiver::class.java).apply {
-                action = IntentKey.NOTIFICATION_BUTTON_CLICK_BROADCAST
-                putExtra(IntentExtraKey.NOTIFICATION_BUTTON_CLICK_TYPE, notificationAction.name)
+                action = IntentKey.NOTIF_BTN_CLICK_BROADCAST
+                putExtra(IntentExtraKey.NOTIF_BTN_CLICK_TYPE, notificationAction.name)
             }
             val pendingIntent = PendingIntent.getBroadcast(
                 /* context = */ context,
@@ -67,24 +71,49 @@ internal object NotificationsHelper {
                 /* intent = */ intent,
                 /* flags = */ PendingIntent.FLAG_IMMUTABLE
             )
-            notificationLayoutExpanded?.setOnClickPendingIntent(viewId, pendingIntent)
+            notificationLayoutBig?.setOnClickPendingIntent(viewId, pendingIntent)
             return pendingIntent
         }
 
-        setPendingIntent(notificationAction = NotificationAction.NEXT_PAGE, viewId = R.id.iv_next_page)
-        setPendingIntent(notificationAction = NotificationAction.PREVIOUS_PAGE, viewId = R.id.iv_previous_page)
-        setPendingIntent(notificationAction = NotificationAction.PLAY_PAUSE, viewId = R.id.iv_play_pause)
-        setPendingIntent(notificationAction = NotificationAction.NEXT_SENTENCE, viewId = R.id.iv_next_sentence)
-        setPendingIntent(notificationAction = NotificationAction.PREVIOUS_SENTENCE, viewId = R.id.iv_previous_sentence)
+        fun setPendingIntentSmallNotif(
+            notificationAction: NotificationAction,
+            @IntegerRes viewId: Int
+        ): PendingIntent {
+            val intent = Intent(context, ThisBroadcastReceiver::class.java).apply {
+                action = IntentKey.NOTIF_BTN_CLICK_BROADCAST
+                putExtra(IntentExtraKey.NOTIF_BTN_CLICK_TYPE, notificationAction.name)
+            }
+            val pendingIntent = PendingIntent.getBroadcast(
+                /* context = */ context,
+                /* requestCode = */ notificationAction.ordinal,
+                /* intent = */ intent,
+                /* flags = */ PendingIntent.FLAG_IMMUTABLE
+            )
+            notificationLayoutSmall?.setOnClickPendingIntent(viewId, pendingIntent)
+            return pendingIntent
+        }
+
+        setPendingIntentSmallNotif(notificationAction = NotificationAction.PLAY_PAUSE, viewId = R.id.iv_play_pause_small)
+
+        setPendingIntentBigNotif(notificationAction = NotificationAction.NEXT_PAGE, viewId = R.id.iv_next_page)
+        setPendingIntentBigNotif(notificationAction = NotificationAction.PREVIOUS_PAGE, viewId = R.id.iv_previous_page)
+        setPendingIntentBigNotif(notificationAction = NotificationAction.PLAY_PAUSE, viewId = R.id.iv_play_pause)
+        setPendingIntentBigNotif(notificationAction = NotificationAction.NEXT_SENTENCE, viewId = R.id.iv_next_sentence)
+        setPendingIntentBigNotif(notificationAction = NotificationAction.PREVIOUS_SENTENCE, viewId = R.id.iv_previous_sentence)
     }
 
     fun createNotification(
         context: Context,
         @DrawableRes playPauseResId: Int,
-        title: String?
+        title: String?,
+        image: Bitmap?
     ): Notification {
-        notificationLayoutExpanded?.setTextViewText(R.id.tv_notification_track_title, title ?: "")
-        notificationLayoutExpanded?.setImageViewResource(R.id.iv_play_pause, playPauseResId)
+        notificationLayoutBig?.setTextViewText(R.id.tv_notification_track_title, title ?: ":)")
+        notificationLayoutBig?.setImageViewResource(R.id.iv_play_pause, playPauseResId)
+
+        notificationLayoutSmall?.setImageViewBitmap(R.id.iv_image, image)
+        notificationLayoutSmall?.setTextViewText(R.id.tv_notification_track_title, title ?: ":)")
+        notificationLayoutSmall?.setImageViewResource(R.id.iv_play_pause_small, playPauseResId)
 
         val pendingIntent = PendingIntent.getActivity(
             /* context = */ context,
@@ -92,25 +121,18 @@ internal object NotificationsHelper {
             /* intent = */ Intent(context, MainActivity::class.java),
             /* flags = */ PendingIntent.FLAG_IMMUTABLE
         )
-//        val intent = Intent(IntentKey.NOTIFICATION_BUTTON_CLICK_BROADCAST).apply {
-//            putExtra(IntentExtraKey.NOTIFICATION_BUTTON_CLICK_TYPE, NotificationAction.PLAY_PAUSE)
-//        }
-//        val pendingIntentAction = PendingIntent.getBroadcast(
-//            /* context = */ context,
-//            /* requestCode = */ NotificationAction.PLAY_PAUSE.ordinal,
-//            /* intent = */ intent,
-//            /* flags = */ PendingIntent.FLAG_IMMUTABLE
-//        )
         val notification: Notification = NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setContentTitle("Book name playing from play books application")
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSilent(true)
+//            .setVibrate()
+//            .setSound()
+            .setContentTitle(title)
+            .setSmallIcon(R.drawable.ic_app_icon)
             .setStyle(NotificationCompat.DecoratedCustomViewStyle())
-            .setCustomContentView(notificationLayoutExpanded)
-            .setCustomBigContentView(notificationLayoutExpanded)
+            .setCustomContentView(notificationLayoutSmall)
+            .setCustomBigContentView(notificationLayoutBig)
 //            .setOngoing(true)
 //            .setContent(notificationLayout)
-//            .addAction(R.id.iv_play_pause, "play", pendingIntentAction)
             .setContentIntent(pendingIntent)
             .build()
 
@@ -121,9 +143,10 @@ internal object NotificationsHelper {
     fun updateNotification(
         context: Context,
         @DrawableRes playPauseResId: Int,
-        title: String?
+        title: String?,
+        image: Bitmap?
     ) {
-        val notification = createNotification(context, playPauseResId, title)
+        val notification = createNotification(context, playPauseResId, title, image)
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager?
         notificationManager?.notify(MUSIC_PLAYER_NOTIFICATION_ID, notification)
     }

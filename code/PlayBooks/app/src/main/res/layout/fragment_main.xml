@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white"
+    android:clickable="false"
     tools:context=".MainFragment">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -37,7 +38,7 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:layout_marginEnd="16dp"
-                android:indeterminate="true"
+                android:indeterminate="false"
                 android:visibility="gone"
                 app:indicatorColor="@color/purple_200"
                 app:indicatorSize="32dp"
@@ -132,7 +133,7 @@
                     android:scrollbars="none"
                     app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
                     app:layout_constraintTop_toTopOf="parent"
-                    tools:listitem="@layout/list_item_download" />
+                    tools:listitem="@layout/list_item_book" />
 
                 <View
                     android:layout_width="match_parent"

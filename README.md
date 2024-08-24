@@ -3,6 +3,7 @@
 Listen to your e-books!
 
 ## Screenshots
-![alt text](https://github.com/Singularity-Coder/Instant-SQLite/blob/main/assets/sc11.png)
-![alt text](https://github.com/Singularity-Coder/Instant-SQLite/blob/main/assets/sc22.png)
-![alt text](https://github.com/Singularity-Coder/Instant-SQLite/blob/main/assets/sc33.png)
+![alt text](https://github.com/Singularity-Coder/Instant-SQLite/blob/main/assets/sc1.png)
+![alt text](https://github.com/Singularity-Coder/Instant-SQLite/blob/main/assets/sc2.png)
+![alt text](https://github.com/Singularity-Coder/Instant-SQLite/blob/main/assets/sc3.png)
+![alt text](https://github.com/Singularity-Coder/Instant-SQLite/blob/main/assets/sc4.png)

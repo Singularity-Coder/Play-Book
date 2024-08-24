@@ -55,10 +55,10 @@
         <!--        <item name="cornerFamilyTopRight">cut</item>-->
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">0dp</item>
-        <item name="cornerSizeTopRight">10dp</item>
-        <item name="cornerSizeTopLeft">10dp</item>
-        <item name="cornerSizeBottomLeft">10dp</item>
-        <item name="cornerSizeBottomRight">10dp</item>
+        <item name="cornerSizeTopRight">8dp</item>
+        <item name="cornerSizeTopLeft">8dp</item>
+        <item name="cornerSizeBottomLeft">8dp</item>
+        <item name="cornerSizeBottomRight">8dp</item>
     </style>
 
     <!--https://stackoverflow.com/questions/53768913/how-to-apply-styles-from-styles-xml-to-span-->
@@ -150,4 +150,14 @@
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">50%</item>
     </style>
+
+    <style name="ImageRoundedBookCover" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">0dp</item>
+        <item name="cornerSizeTopRight">10dp</item>
+        <item name="cornerSizeBottomRight">10dp</item>
+        <item name="cornerSizeBottomLeft">4dp</item>
+        <item name="cornerSizeTopLeft">4dp</item>
+    </style>
+
 </resources>

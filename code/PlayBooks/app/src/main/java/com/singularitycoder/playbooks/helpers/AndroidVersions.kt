@@ -2,7 +2,7 @@ package com.singularitycoder.playbooks.helpers
 
 import android.os.Build
 
-object AndroidVersion {
+object AndroidVersions {
 
     @JvmStatic
     fun isTiramisu() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU

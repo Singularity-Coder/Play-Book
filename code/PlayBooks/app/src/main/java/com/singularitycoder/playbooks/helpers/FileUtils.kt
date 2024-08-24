@@ -33,9 +33,6 @@ import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.content.getSystemService
-import com.itextpdf.text.pdf.PdfReader
-import com.itextpdf.text.pdf.parser.PdfTextExtractor
-import com.singularitycoder.playbooks.PdfBook
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -795,35 +792,6 @@ fun File.getText(
     }
     reader.close()
     stringBuilder.toString()
-} catch (_: Exception) {
-    null
-}
-
-// https://stackoverflow.com/questions/58750885/how-can-i-convert-pdf-file-to-text
-suspend fun File.getTextFromPdf(
-    callback: suspend (progress: Int, totalPages: Int) -> Unit
-): PdfBook? = try {
-    var parsedText = ""
-    val pagePositionsList = mutableListOf<Int>()
-    val periodPositionsList = mutableListOf<Int>()
-    val reader = PdfReader(this.absolutePath)
-    for (i in 0 until reader.numberOfPages) {
-        val pageString = PdfTextExtractor.getTextFromPage(reader, i + 1)
-        pageString.forEachIndexed { index, char ->
-            if (char == '.') periodPositionsList.add(parsedText.length + index)
-        }
-        // Extracting the content from different pages - add new lines if necessary - "$parsedText${pageString.trim { it <= ' ' }}\n\n\n\n"
-        parsedText = "$parsedText${pageString.trim { it <= ' ' }}"
-        pagePositionsList.add(parsedText.length) // This will the position of next page
-        callback.invoke(i, reader.numberOfPages)
-    }
-    reader.close()
-    PdfBook(
-        pageCount = reader.numberOfPages,
-        text = parsedText,
-        pagePositionsList = pagePositionsList,
-        periodPositionsList = periodPositionsList
-    )
 } catch (_: Exception) {
     null
 }

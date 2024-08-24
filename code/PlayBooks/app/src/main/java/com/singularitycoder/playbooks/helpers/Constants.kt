@@ -10,6 +10,12 @@ val globalLayoutAnimation = R.anim.layout_animation_fall_down
 val globalSlideToBottomAnimation = R.anim.layout_animation_fall_down
 val globalSlideToTopAnimation = R.anim.layout_animation_slide_from_bottom
 
+object TtsConstants {
+    const val MAX = 16
+    const val MIN = 1
+    const val DEFAULT = 5
+}
+
 object FragmentResultKey {
 }
 
@@ -25,23 +31,34 @@ enum class NotificationAction {
 }
 
 object IntentKey {
-    const val NOTIFICATION_BUTTON_CLICK_BROADCAST = "NOTIFICATION_BUTTON_CLICK_BROADCAST"
-    const val MAIN_BROADCAST_FROM_SERVICE = "MAIN_BROADCAST"
+    const val NOTIF_BTN_CLICK_BROADCAST = "NOTIF_BTN_CLICK_BROADCAST"
+    const val NOTIF_BTN_CLICK_BROADCAST_2 = "NOTIF_BTN_CLICK_BROADCAST_2"
+    const val MAIN_BROADCAST_FROM_SERVICE = "MAIN_BROADCAST_FROM_SERVICE"
 }
 
 object IntentExtraKey {
     const val MESSAGE = "MESSAGE"
-    const val NOTIFICATION_BUTTON_CLICK_TYPE = "NOTIFICATION_BUTTON_CLICK_TYPE"
+    const val NOTIF_BTN_CLICK_TYPE = "NOTIF_BTN_CLICK_TYPE"
+    const val NOTIF_BTN_CLICK_TYPE_2 = "NOTIF_BTN_CLICK_TYPE_2"
     const val BOOK_ID = "BOOK_ID"
+    const val TTS_WORD_HIGHLIGHT_START = "TTS_WORD_HIGHLIGHT_START"
+    const val TTS_WORD_HIGHLIGHT_END = "TTS_WORD_HIGHLIGHT_END"
+    const val TTS_WORD_HIGHLIGHT_UTTERANCE_ID = "TTS_WORD_HIGHLIGHT_UTTERANCE_ID"
 }
 
 object IntentExtraValue {
     const val UNBIND = "UNBIND"
-    const val UPDATE_PROGRESS = "UPDATE_PROGRESS"
+    const val FOREGROUND_SERVICE_READY = "UPDATE_PROGRESS"
     const val READING_COMPLETE = "READING_COMPLETE"
     const val TTS_READY = "TTS_READY"
     const val SERVICE_DESTROYED = "SERVICE_DESTROYED"
     const val TTS_PAUSED = "TTS_PAUSED"
+    const val TTS_PLAYING = "TTS_PLAYING"
+    const val TTS_WORD_HIGHLIGHT = "TTS_WORD_HIGHLIGHT"
+//    const val NEXT_SENTENCE = "NEXT_SENTENCE"
+//    const val PREVIOUS_SENTENCE = "PREVIOUS_SENTENCE"
+//    const val NEXT_PAGE = "NEXT_PAGE"
+//    const val PREVIOUS_PAGE = "PREVIOUS_PAGE"
 }
 
 object Db {

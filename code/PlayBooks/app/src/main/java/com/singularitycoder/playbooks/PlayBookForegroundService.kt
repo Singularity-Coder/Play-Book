@@ -8,25 +8,26 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ServiceInfo
+import android.graphics.Bitmap
 import android.media.AudioManager
 import android.os.Binder
 import android.os.Bundle
 import android.os.IBinder
 import android.speech.tts.TextToSpeech
-import android.speech.tts.TextToSpeech.OnInitListener
 import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import androidx.core.app.ServiceCompat
-import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.singularitycoder.playbooks.helpers.IntentExtraKey
 import com.singularitycoder.playbooks.helpers.IntentExtraValue
 import com.singularitycoder.playbooks.helpers.IntentKey
 import com.singularitycoder.playbooks.helpers.NotificationAction
 import com.singularitycoder.playbooks.helpers.NotificationsHelper
+import com.singularitycoder.playbooks.helpers.TtsConstants
 import com.singularitycoder.playbooks.helpers.TtsTag
 import com.singularitycoder.playbooks.helpers.db.PlayBookDatabase
-import com.singularitycoder.playbooks.helpers.showToast
+import com.singularitycoder.playbooks.helpers.getBookCoversFileDir
+import com.singularitycoder.playbooks.helpers.toBitmap
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -38,7 +39,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.Locale
 
-class PlayBookForegroundService : Service(), OnInitListener {
+class PlayBookForegroundService : Service() {
     companion object {
         private val TAG = this::class.java.simpleName
     }
@@ -64,21 +65,25 @@ class PlayBookForegroundService : Service(), OnInitListener {
     private var bookDataDao: BookDataDao? = null
 
     private var bookId: String? = null
-    private var currentBook: Book? = null
-    private var currentBookData: BookData? = null
+    private var currentPlayingBook: Book? = null
+    private var currentPlayingBookData: BookData? = null
 
-    inner class LocalBinder : Binder() {
-        fun getService(): PlayBookForegroundService = this@PlayBookForegroundService
-    }
+    private var currentPeriodPosition: Int = -1
+    private var currentPagePosition: Int = 0
 
+    private var currentlyPlayingText: CharSequence? = null
+
+    private var bookCoverBitmap: Bitmap? = null
+
+    /** This receiver should be here as when app is killed this service must be self sufficient and cannot depend on killed app resources */
     private val notificationButtonClickReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            if (intent.action != IntentKey.NOTIFICATION_BUTTON_CLICK_BROADCAST) return
-            val actionExtra = intent.getStringExtra(IntentExtraKey.NOTIFICATION_BUTTON_CLICK_TYPE)
+            if (intent.action != IntentKey.NOTIF_BTN_CLICK_BROADCAST_2) return
+            val actionExtra = intent.getStringExtra(IntentExtraKey.NOTIF_BTN_CLICK_TYPE_2)
             when (actionExtra) {
                 NotificationAction.PLAY_PAUSE.name -> {
                     Log.d(TAG, "PLAY_PAUSE CLICK")
-                    playPause(isPlay = true)
+                    playPauseTts()
                 }
 
                 NotificationAction.PREVIOUS_SENTENCE.name -> {
@@ -104,20 +109,21 @@ class PlayBookForegroundService : Service(), OnInitListener {
         }
     }
 
+    inner class LocalBinder : Binder() {
+        fun getService(): PlayBookForegroundService = this@PlayBookForegroundService
+    }
+
     /** Foreground Service created */
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     override fun onCreate() {
         super.onCreate()
         Log.d(TAG, "onCreate - First")
-        ContextCompat.registerReceiver(
-            /* context = */ this,
-            /* receiver = */ notificationButtonClickReceiver,
-            /* filter = */ IntentFilter(IntentKey.NOTIFICATION_BUTTON_CLICK_BROADCAST),
-            /* flags = */ ContextCompat.RECEIVER_NOT_EXPORTED
-        )
         localBroadcastManager = LocalBroadcastManager.getInstance(this)
+        localBroadcastManager?.registerReceiver(
+            /* receiver = */ notificationButtonClickReceiver,
+            /* filter = */ IntentFilter(IntentKey.NOTIF_BTN_CLICK_BROADCAST_2)
+        )
         ttsParams.putString(TextToSpeech.Engine.KEY_PARAM_STREAM, AudioManager.STREAM_ALARM.toString())
-        tts = TextToSpeech(/* context = */ this, /* listener = */ this)
         val appContext = this.applicationContext ?: throw IllegalStateException()
         val dbEntryPoint = EntryPointAccessors.fromApplication(appContext, com.singularitycoder.playbooks.PdfToTextWorker.ThisEntryPoint::class.java)
         bookDao = dbEntryPoint.db().bookDao()
@@ -128,16 +134,63 @@ class PlayBookForegroundService : Service(), OnInitListener {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d(TAG, "onStartCommand - Second")
         bookId = intent?.getStringExtra(IntentExtraKey.BOOK_ID)
-        CoroutineScope(Dispatchers.IO).launch {
-            currentBook = bookDao?.getItemById(bookId ?: "")
-            currentBookData = bookDataDao?.getItemById(bookId ?: "")
+        tts = TextToSpeech(
+            /* context = */ this,
+            /* listener = */ object : TextToSpeech.OnInitListener {
+                override fun onInit(p0: Int) {
+                    doWhenTtsIsReady()
+                }
+            }
+        )
 
-            withContext(Dispatchers.Main) {
-                startAsForegroundService()
+        return super.onStartCommand(intent, flags, startId)
+    }
+
+    private fun doWhenTtsIsReady() {
+        print("Text-To-Speech engine is ready.")
+
+        tts?.availableLanguages?.forEach { locale: Locale ->
+            if (tts?.isLanguageAvailable(locale) == TextToSpeech.LANG_AVAILABLE) {
+                availableLanguages.add(locale)
             }
         }
-        // init TTS
-        return super.onStartCommand(intent, flags, startId)
+        tts?.setLanguage(Locale.US)
+        setTtsPitch(TtsConstants.DEFAULT.toFloat())
+        setTtsSpeechRate(TtsConstants.DEFAULT.toFloat())
+
+        // setOnUtteranceProgressListener must be set after tts is init
+        // https://stackoverflow.com/questions/52233235/setonutteranceprogresslistener-not-at-all-working-for-text-to-speech-for-api-2
+        tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+            override fun onStart(uttId: String?) = Unit
+
+            override fun onDone(uttId: String?) {
+                if (uttId == TtsTag.UID_SPEAK) {
+                    // do something
+                    nextSentence()
+                }
+            }
+
+            override fun onError(uttId: String?) = Unit
+
+            override fun onRangeStart(
+                utteranceId: String?,
+                start: Int,
+                end: Int,
+                frame: Int
+            ) {
+                val intent = Intent(IntentKey.MAIN_BROADCAST_FROM_SERVICE).apply {
+                    putExtra(IntentExtraKey.MESSAGE, IntentExtraValue.TTS_WORD_HIGHLIGHT)
+                    putExtra(IntentExtraKey.TTS_WORD_HIGHLIGHT_START, start)
+                    putExtra(IntentExtraKey.TTS_WORD_HIGHLIGHT_END, end)
+                }
+                localBroadcastManager?.sendBroadcast(intent)
+            }
+        })
+
+        loadData(bookId)
+        startAsForegroundService()
+
+        sendBroadcastToMain(IntentExtraValue.TTS_READY)
     }
 
     /** Return the communication channel to the service. */
@@ -150,7 +203,7 @@ class PlayBookForegroundService : Service(), OnInitListener {
     override fun onDestroy() {
         super.onDestroy()
         Log.d(TAG, "onDestroy")
-        unregisterReceiver(notificationButtonClickReceiver)
+        localBroadcastManager?.unregisterReceiver(notificationButtonClickReceiver)
         // tts.shutdown
     }
 
@@ -174,13 +227,13 @@ class PlayBookForegroundService : Service(), OnInitListener {
         try {
             // Create the notification to display while the service is running
 //            val notification = NotificationCompat.Builder(this, "CHANNEL_ID").build()
-
             NotificationsHelper.createNotificationChannel(this@PlayBookForegroundService)
             NotificationsHelper.createNotificationLayout(this@PlayBookForegroundService)
             val notification = NotificationsHelper.createNotification(
                 context = this@PlayBookForegroundService,
                 playPauseResId = R.drawable.round_pause_24,
-                title = currentBook?.title
+                title = ":)",
+                image = null
             )
             ServiceCompat.startForeground(
                 /* service = */ this@PlayBookForegroundService,
@@ -197,6 +250,28 @@ class PlayBookForegroundService : Service(), OnInitListener {
         }
     }
 
+    fun loadData(bookId: String?) {
+        this.bookId = bookId
+        currentPeriodPosition = -1
+        CoroutineScope(Dispatchers.IO).launch {
+            currentPlayingBook = bookDao?.getItemById(bookId ?: "")
+            currentPlayingBookData = bookDataDao?.getItemById(bookId ?: "")
+            bookCoverBitmap = File(
+                /* parent = */ this@PlayBookForegroundService.getBookCoversFileDir(),
+                /* child = */ "${currentPlayingBook?.id}.jpg"
+            ).toBitmap()
+
+            withContext(Dispatchers.Main) {
+                sendBroadcastToMain(IntentExtraValue.FOREGROUND_SERVICE_READY)
+                speak(
+                    startIndex = 0,
+                    endIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(0) ?: 0
+                )
+                updatePlayerPlayingState()
+            }
+        }
+    }
+
     private fun sendBroadcastToMain(key: String) {
         val intent = Intent(IntentKey.MAIN_BROADCAST_FROM_SERVICE).apply {
             putExtra(IntentExtraKey.MESSAGE, key)
@@ -209,94 +284,171 @@ class PlayBookForegroundService : Service(), OnInitListener {
      * Can be called from inside or outside the service.
      */
     fun stopForegroundService() {
-        sendBroadcastToMain(IntentExtraValue.UNBIND)
         tts?.shutdown()
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
 
-    override fun onInit(p0: Int) {
-        print("Text-To-Speech engine is ready.")
-
-        // setOnUtteranceProgressListener must be set after tts is init
-        // https://stackoverflow.com/questions/52233235/setonutteranceprogresslistener-not-at-all-working-for-text-to-speech-for-api-2
-        tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-            override fun onStart(uttId: String?) = Unit
-
-            override fun onDone(uttId: String?) {
-                if (uttId == TtsTag.UID_SPEAK) {
-                    // do something
-                }
-            }
-
-            override fun onError(uttId: String?) = Unit
-        })
-    }
-
     private fun speak(startIndex: Int, endIndex: Int) {
-        val text = if (endIndex - startIndex > TextToSpeech.getMaxSpeechInputLength()) {
-            "Sentence is too long."
-        } else {
-//            currentPlayingBookData?.text?.subSequence(startIndex, endIndex)
-            ""
-        }
-        tts?.speak(
-            /* text = */ text,
-            /* queueMode = */ TextToSpeech.QUEUE_FLUSH,
-            /* params = */ ttsParams,
-            /* utteranceId = */ TtsTag.UID_SPEAK
-        )
-    }
-
-    private fun speak2(charSequence: String) {
-        val position: Int = 0
-
-        val sizeOfChar = charSequence.length
-        val testStr = charSequence.substring(position, sizeOfChar)
-
-        var next = 20
-        var pos = 0
-        while (true) {
-            var temp = ""
-            Log.e("in loop", "" + pos)
-
-            try {
-                temp = testStr.substring(pos, next)
-                val params = HashMap<String, String>()
-                params[TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID] = temp
-                tts?.speak(temp, TextToSpeech.QUEUE_ADD, params)
-
-                pos += 20
-                next += 20
-            } catch (e: java.lang.Exception) {
-                temp = testStr.substring(pos, testStr.length)
-                tts?.speak(temp, TextToSpeech.QUEUE_ADD, null)
-                break
+//        var newStartIndex = startIndex
+//        var newEndIndex = endIndex
+//        if (newStartIndex == 0 || newEndIndex == 0) {
+//            currentPeriodPosition += 0
+//            newStartIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodPosition) ?: 0
+//            newEndIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodPosition + 1) ?: 0
+//        }
+//        Log.d("POSITIONSSSSSS:", "$newStartIndex $newEndIndex")
+        CoroutineScope(Dispatchers.Main).launch {
+            val text = try {
+                if (endIndex - startIndex > TextToSpeech.getMaxSpeechInputLength()) {
+                    "Sentence is too long. Skipping to next sentence."
+                } else {
+                    /** startIndex + 1 to avoid reading periods "." */
+                    val modifiedStartIndex = if (currentPlayingBookData?.text?.get(startIndex) == '.') {
+                        startIndex + 1
+                    } else {
+                        startIndex
+                    }
+                    currentPlayingBookData?.text?.subSequence(modifiedStartIndex, endIndex)
+                }
+            } catch (_: Exception) {
+                ""
             }
+            currentlyPlayingText = text
+            sendBroadcastToMain(IntentExtraValue.READING_COMPLETE)
+            tts?.speak(
+                /* text = */ text,
+                /* queueMode = */ TextToSpeech.QUEUE_FLUSH,
+                /* params = */ ttsParams,
+                /* utteranceId = */ TtsTag.UID_SPEAK
+            )
         }
     }
 
-    fun splitText(text: String) {
-        val length: Int = TextToSpeech.getMaxSpeechInputLength() - 1
-//        val chunks: Iterable<String> = Splitter.fixedLength(length).split(text)
-//        Lists.newArrayList(chunks)
+    fun setTtsPitch(pitch: Float) {
+        tts?.setPitch(pitch / 5)
     }
 
-    private fun doOnReadingDone() {
-        // This is probably not necessary. Add directly to speak
-        ttsParams.putString(
-            TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID,
-            "end of wakeup message ID"
-        )
-        tts?.speak(
-            /* text = */ "text to speak",
-            /* queueMode = */ TextToSpeech.QUEUE_ADD,
-            /* params = */ ttsParams,
-            /* utteranceId = */ ""
+    fun setTtsSpeechRate(speed: Float) {
+        tts?.setSpeechRate(speed / 5)
+    }
+
+    fun setTtsLanguage(locale: Locale) {
+        tts?.setLanguage(locale)
+    }
+
+    fun playPauseTts() {
+        if (tts?.isSpeaking == true) {
+            tts?.stop()
+            updatePlayerPausedState()
+        } else {
+            speak(
+                startIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodPosition) ?: 0,
+                endIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodPosition + 1) ?: 0
+            )
+            updatePlayerPlayingState()
+        }
+    }
+
+    private fun updatePlayerPlayingState() {
+        sendBroadcastToMain(IntentExtraValue.TTS_PLAYING)
+        NotificationsHelper.updateNotification(
+            context = this,
+            playPauseResId = R.drawable.round_pause_24,
+            title = currentPlayingBook?.title,
+            image = bookCoverBitmap
         )
     }
 
-    private fun saveAsAudioFile() {
+    private fun updatePlayerPausedState() {
+        sendBroadcastToMain(IntentExtraValue.TTS_PAUSED)
+        NotificationsHelper.updateNotification(
+            context = this,
+            playPauseResId = R.drawable.round_play_arrow_24,
+            title = currentPlayingBook?.title,
+            image = bookCoverBitmap
+        )
+    }
+
+    fun stopTts() {
+        if (tts?.isSpeaking == true) {
+            tts?.stop()
+        }
+    }
+
+    fun stopAndPlayTts() {
+        stopTts()
+        speak(
+            startIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodPosition) ?: 0,
+            endIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodPosition + 1) ?: 0
+        )
+        updatePlayerPlayingState()
+    }
+
+    fun nextSentence() {
+        currentPeriodPosition += 1
+        speak(
+            startIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodPosition) ?: 0,
+            endIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodPosition + 1) ?: 0
+        )
+        updatePlayerPlayingState()
+    }
+
+    fun previousSentence() {
+        currentPeriodPosition -= 1
+        speak(
+            startIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodPosition - 1) ?: 0,
+            endIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodPosition) ?: 0
+        )
+        updatePlayerPlayingState()
+    }
+
+    fun nextPage(pagePosition: Int? = null) {
+        if (pagePosition != null) {
+            currentPeriodPosition += pagePosition
+        } else {
+            currentPeriodPosition += 3
+        }
+        speak(
+            startIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodPosition) ?: 0,
+            endIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodPosition + 1) ?: 0
+        )
+//        currentPeriodPosition += currentPlayingBookData?.periodCountPerPageList?.find { it >= currentPeriodPosition } ?: 0
+//        speak(
+//            startIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodPosition) ?: 0,
+//            endIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodPosition + 1) ?: 0
+//        )
+        updatePlayerPlayingState()
+    }
+
+    fun previousPage(pagePosition: Int? = null) {
+        if (pagePosition != null) {
+            currentPeriodPosition -= pagePosition
+        } else {
+            currentPeriodPosition -= 3
+        }
+        speak(
+            startIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodPosition - 1) ?: 0,
+            endIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodPosition) ?: 0
+        )
+//        currentPeriodPosition -= currentPlayingBookData?.periodCountPerPageList?.find { it <= currentPeriodPosition } ?: 0
+//        speak(
+//            startIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodPosition) ?: 0,
+//            endIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodPosition + 1) ?: 0
+//        )
+        updatePlayerPlayingState()
+    }
+
+    /** Any call to speak() for the same string content as wakeUpText will result in the playback of destFileName.
+     * This is done to avoid synthesizing text in tts again and save resources.
+     * You can provide custom audio file as path as well */
+    private fun playSavedAudioFile() {
+        val wakeUpText = "Are you up yet?"
+        val destFile = File("/sdcard/myAppCache/wakeUp.wav")
+        tts?.addSpeech(wakeUpText, destFile)
+    }
+
+    fun saveAsAudioFile() {
         val wakeUpText = "Are you up yet?"
         val destFile = File("/sdcard/myAppCache/wakeUp.wav")
         ttsParams.putString(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, wakeUpText) // this is unnecessary. Set in synthesizeToFile param utteranceId
@@ -308,39 +460,11 @@ class PlayBookForegroundService : Service(), OnInitListener {
         )
     }
 
-    fun getTts(): TextToSpeech? = tts
+    fun getAvailableTtsLanguages(): List<Locale> = availableLanguages
 
-    fun playPause(isPlay: Boolean) {
-        if (tts?.isSpeaking == true || isPlay.not()) {
-            tts?.stop()
-            NotificationsHelper.updateNotification(
-                context = this,
-                playPauseResId = R.drawable.round_play_arrow_24,
-                title = currentBook?.title
-            )
-        } else {
-//            speak(startIndex = 0, endIndex = currentPlayingBookData?.periodPositionsList?.firstOrNull() ?: 0)
-            NotificationsHelper.updateNotification(
-                context = this,
-                playPauseResId = R.drawable.round_pause_24,
-                title = currentBook?.title
-            )
-        }
-    }
+    fun getCurrentPlayingBook(): Book? = currentPlayingBook
 
-    fun nextSentence() {
+    fun getCurrentPeriodPosition(): Int = currentPeriodPosition
 
-    }
-
-    fun previousSentence() {
-
-    }
-
-    fun nextPage() {
-
-    }
-
-    fun previousPage() {
-
-    }
+    fun getCurrentlyPlayingText(): CharSequence? = currentlyPlayingText
 }

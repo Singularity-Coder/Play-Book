@@ -3,48 +3,21 @@ package com.singularitycoder.playbooks
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.util.Log
-import androidx.core.os.bundleOf
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.singularitycoder.playbooks.helpers.IntentExtraKey
 import com.singularitycoder.playbooks.helpers.IntentKey
-import com.singularitycoder.playbooks.helpers.NotificationAction
-import com.singularitycoder.playbooks.helpers.sendCustomBroadcast
 
 class ThisBroadcastReceiver : BroadcastReceiver() {
 
-    companion object {
-        private val TAG = this::class.java.simpleName
-    }
-
-    /** Data sent to [HomeFragment] */
+    /** Data sent to [MainFragment] */
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
-            IntentKey.NOTIFICATION_BUTTON_CLICK_BROADCAST -> {
-                val actionExtra = intent.getStringExtra(IntentExtraKey.NOTIFICATION_BUTTON_CLICK_TYPE)
-                when (actionExtra) {
-                    NotificationAction.PLAY_PAUSE.name -> {
-                        Log.d(TAG, "PLAY_PAUSE CLICK")
-                    }
-
-                    NotificationAction.PREVIOUS_SENTENCE.name -> {
-                        Log.d(TAG, "PREVIOUS_SENTENCE CLICK")
-                    }
-
-                    NotificationAction.NEXT_SENTENCE.name -> {
-                        Log.d(TAG, "NEXT_SENTENCE CLICK")
-                    }
-
-                    NotificationAction.PREVIOUS_PAGE.name -> {
-                        Log.d(TAG, "PREVIOUS_PAGE CLICK")
-                    }
-
-                    NotificationAction.NEXT_PAGE.name -> {
-                        Log.d(TAG, "NEXT_PAGE CLICK")
-                    }
+            IntentKey.NOTIF_BTN_CLICK_BROADCAST -> {
+                val intent2 = Intent().apply {
+                    action = IntentKey.NOTIF_BTN_CLICK_BROADCAST_2
+                    putExtra(IntentExtraKey.NOTIF_BTN_CLICK_TYPE_2, intent.getStringExtra(IntentExtraKey.NOTIF_BTN_CLICK_TYPE))
                 }
-                val packageName = intent.data?.encodedSchemeSpecificPart
-                val bundle = bundleOf(IntentKey.NOTIFICATION_BUTTON_CLICK_BROADCAST to packageName)
-                context.sendCustomBroadcast(action = intent.action, bundle = bundle)
+                LocalBroadcastManager.getInstance(context).sendBroadcast(intent2)
             }
 
             else -> Unit

@@ -9,14 +9,18 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.ServiceConnection
-import android.media.AudioManager
+import android.graphics.Color
+import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.speech.tts.TextToSpeech
-import android.speech.tts.TextToSpeech.OnInitListener
-import android.speech.tts.UtteranceProgressListener
 import android.text.Editable
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.style.BackgroundColorSpan
+import android.text.style.StyleSpan
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.MenuItem
@@ -49,9 +53,10 @@ import com.singularitycoder.playbooks.helpers.FILE_PROVIDER
 import com.singularitycoder.playbooks.helpers.IntentExtraKey
 import com.singularitycoder.playbooks.helpers.IntentExtraValue
 import com.singularitycoder.playbooks.helpers.IntentKey
-import com.singularitycoder.playbooks.helpers.TtsTag
+import com.singularitycoder.playbooks.helpers.TtsConstants
 import com.singularitycoder.playbooks.helpers.WorkerData
 import com.singularitycoder.playbooks.helpers.WorkerTag
+import com.singularitycoder.playbooks.helpers.clipboard
 import com.singularitycoder.playbooks.helpers.collectLatestLifecycleFlow
 import com.singularitycoder.playbooks.helpers.deleteAllFilesFrom
 import com.singularitycoder.playbooks.helpers.deleteFileFrom
@@ -59,7 +64,6 @@ import com.singularitycoder.playbooks.helpers.deviceHeight
 import com.singularitycoder.playbooks.helpers.dpToPx
 import com.singularitycoder.playbooks.helpers.drawable
 import com.singularitycoder.playbooks.helpers.getBookCoversFileDir
-import com.singularitycoder.playbooks.helpers.getBookId
 import com.singularitycoder.playbooks.helpers.getDownloadDirectory
 import com.singularitycoder.playbooks.helpers.globalLayoutAnimation
 import com.singularitycoder.playbooks.helpers.hasNotificationsPermission
@@ -77,6 +81,8 @@ import com.singularitycoder.playbooks.helpers.showAlertDialog
 import com.singularitycoder.playbooks.helpers.showAppSettings
 import com.singularitycoder.playbooks.helpers.showPopupMenuWithIcons
 import com.singularitycoder.playbooks.helpers.showSingleSelectionPopupMenu
+import com.singularitycoder.playbooks.helpers.showSnackBar
+import com.singularitycoder.playbooks.helpers.showToast
 import com.singularitycoder.playbooks.helpers.showTtsSettings
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -90,7 +96,7 @@ import java.util.Locale
 const val ARG_PARAM_SCREEN_TYPE = "ARG_PARAM_SCREEN_TYPE"
 
 @AndroidEntryPoint
-class MainFragment : Fragment(), OnInitListener {
+class MainFragment : Fragment() {
 
     companion object {
         private val TAG = this::class.java.simpleName
@@ -111,70 +117,116 @@ class MainFragment : Fragment(), OnInitListener {
 
     private lateinit var binding: FragmentMainBinding
 
-    private var tts: TextToSpeech? = null
+    private var isTtsPresent = false
 
-    private val availableLanguages = mutableListOf<Locale>()
-
-    private val ttsParams = Bundle()
-
-    private var selectedTtsLanguage = Locale.getDefault().displayName
+    private var selectedTtsLanguage: Locale? = Locale.getDefault()
 
     private val bookViewModel by viewModels<BookViewModel>()
 
-//    private var currentBookPosition = 0
-
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<MaterialCardView>
-
-    private var currentPlayingBook: Book? = null
-    private var currentPlayingBookData: BookData? = null
-    private var currentPeriodPosition: Int = 0
-    private var currentPagePosition: Int = 0
 
     private var playBookForegroundService: PlayBookForegroundService? = null
 
     private var isServiceBound = false
+
+//    private val notificationButtonClickReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+//        override fun onReceive(context: Context, intent: Intent) {
+//            if (intent.action != IntentKey.NOTIF_BTN_CLICK_BROADCAST_2) return
+//            val actionExtra = intent.getStringExtra(IntentExtraKey.NOTIF_BTN_CLICK_TYPE_2)
+//            when (actionExtra) {
+//                NotificationAction.PLAY_PAUSE.name -> {
+//                    Log.d(TAG, "PLAY_PAUSE CLICK")
+//                    playBookForegroundService?.playPauseTts()
+//                }
+//
+//                NotificationAction.PREVIOUS_SENTENCE.name -> {
+//                    Log.d(TAG, "PREVIOUS_SENTENCE CLICK")
+//                    playBookForegroundService?.previousSentence()
+//                }
+//
+//                NotificationAction.NEXT_SENTENCE.name -> {
+//                    Log.d(TAG, "NEXT_SENTENCE CLICK")
+//                    playBookForegroundService?.nextSentence()
+//                }
+//
+//                NotificationAction.PREVIOUS_PAGE.name -> {
+//                    Log.d(TAG, "PREVIOUS_PAGE CLICK")
+//                    playBookForegroundService?.previousPage()
+//                }
+//
+//                NotificationAction.NEXT_PAGE.name -> {
+//                    Log.d(TAG, "NEXT_PAGE CLICK")
+//                    playBookForegroundService?.nextPage()
+//                }
+//            }
+//        }
+//    }
 
     private val messageReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val msg = intent.getStringExtra(IntentExtraKey.MESSAGE)
             when (msg) {
                 IntentExtraValue.TTS_READY -> {
-                    Log.d(TAG, "PREPARED broadcast received")
-//                    trackPrepared()
+                    Log.d(TAG, "TTS_READY broadcast received")
                 }
 
-                IntentExtraValue.READING_COMPLETE -> {
-                    Log.d(TAG, "COMPLETION broadcast received")
-//                    val newTrackIndex = intent.getIntExtra(Constants.CURRENT_TRACK_KEY, trackList.indexOf(currentTrack))
-//                    trackCompletion(newTrackIndex)
+                IntentExtraValue.FOREGROUND_SERVICE_READY -> {
+                    Log.d(TAG, "FOREGROUND_SERVICE_READY broadcast received")
+                    binding.doWhenForegroundServiceIsReady()
                 }
 
-                IntentExtraValue.UPDATE_PROGRESS -> {
-                    Log.d(TAG, "UPDATE PROGRESS broadcast received")
-//                    updateProgressBar()
-                }
-
-                IntentExtraValue.UNBIND -> {
-                    Log.d(TAG, "UNBIND REQ broadcast received")
-//                    unbind()
-                }
-
-                IntentExtraValue.SERVICE_DESTROYED -> {
-//                    onServiceDestroy()
+                IntentExtraValue.TTS_PLAYING -> {
+                    binding.layoutPersistentBottomSheet.ivPlay.setImageDrawable(context.drawable(R.drawable.round_pause_24))
+                    binding.layoutPersistentBottomSheet.ivHeaderPlay.setImageDrawable(context.drawable(R.drawable.round_pause_24))
+                    binding.layoutPersistentBottomSheet.layoutSliderPlayback.apply {
+//                        sliderCustom.progress = playBookForegroundService?.getCurrentPeriodPosition() ?: 0
+                        tvValue.text = "${sliderCustom.progress}/${playBookForegroundService?.getCurrentPlayingBook()?.pageCount}"
+                        sliderCustom.min = 1
+                        sliderCustom.max = playBookForegroundService?.getCurrentPlayingBook()?.pageCount ?: 0
+                    }
+                    val bookCover = File(
+                        /* parent = */ context.getBookCoversFileDir(),
+                        /* child = */ "${playBookForegroundService?.getCurrentPlayingBook()?.id}.jpg"
+                    )
+                    binding.layoutPersistentBottomSheet.ivHeaderImage.load(bookCover)
                 }
 
                 IntentExtraValue.TTS_PAUSED -> {
-//                    onTrackPaused()
+                    binding.layoutPersistentBottomSheet.ivPlay.setImageDrawable(context.drawable(R.drawable.round_play_arrow_24))
+                    binding.layoutPersistentBottomSheet.ivHeaderPlay.setImageDrawable(context.drawable(R.drawable.round_play_arrow_24))
                 }
+
+                IntentExtraValue.READING_COMPLETE -> {
+                    /** This will work for all other languages when highlighting fails */
+                    binding.layoutPersistentBottomSheet.tvCurrentlyReading.text = playBookForegroundService?.getCurrentlyPlayingText()?.trim()
+                }
+
+                IntentExtraValue.TTS_WORD_HIGHLIGHT -> {
+                    /** This works for English languages only */
+                    try {
+                        val start = intent.getIntExtra(IntentExtraKey.TTS_WORD_HIGHLIGHT_START, 0) - 1
+                        val end = intent.getIntExtra(IntentExtraKey.TTS_WORD_HIGHLIGHT_END, 0) - 1 // -1 as we set start + 1 in speak method in service
+                        val utterance = playBookForegroundService?.getCurrentlyPlayingText()?.trim()
+                        val textWithHighlights: Spannable = SpannableString(utterance).apply {
+                            setSpan(StyleSpan(Typeface.BOLD), start, end, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
+                            setSpan(BackgroundColorSpan(Color.YELLOW), start, end, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
+                        }
+                        binding.layoutPersistentBottomSheet.tvCurrentlyReading.text = textWithHighlights
+                    } catch (e: Exception) {
+                        println(e)
+                    }
+                }
+
+                else -> Unit
             }
         }
     }
 
     // needed to communicate with the service.
-    private val ttsConnection = object : ServiceConnection {
+    private val playerConnection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
-            // we've bound to ExampleLocationForegroundService, cast the IBinder and get ExampleLocationForegroundService instance.
-            print("onServiceConnected")
+            // we've bound to PlayBookForegroundService, cast the IBinder and get PlayBookForegroundService instance.
+            Log.d(TAG, "onServiceConnected")
             val binder = service as PlayBookForegroundService.LocalBinder
             playBookForegroundService = binder.getService()
             isServiceBound = true
@@ -183,7 +235,7 @@ class MainFragment : Fragment(), OnInitListener {
 
         override fun onServiceDisconnected(arg0: ComponentName) {
             // This is called when the connection with the service has been disconnected. Clean up.
-            print("onServiceDisconnected")
+            Log.d(TAG, "onServiceDisconnected")
             isServiceBound = false
             playBookForegroundService = null
         }
@@ -217,8 +269,9 @@ class MainFragment : Fragment(), OnInitListener {
     ) { result: ActivityResult ->
         if (result.resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
             // success, create the TTS instance
-            tts = TextToSpeech(context, this)
+            isTtsPresent = true
         } else {
+            isTtsPresent = false
             // missing data, install it
             val intent = Intent().apply {
                 action = TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA
@@ -247,48 +300,26 @@ class MainFragment : Fragment(), OnInitListener {
     override fun onResume() {
         super.onResume()
         loadPdfs()
-        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(messageReceiver, IntentFilter(IntentKey.MAIN_BROADCAST_FROM_SERVICE))
+        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(
+            /* receiver = */ messageReceiver,
+            /* filter = */ IntentFilter(IntentKey.MAIN_BROADCAST_FROM_SERVICE)
+        )
+//        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(
+//            /* receiver = */ notificationButtonClickReceiver,
+//            /* filter = */ IntentFilter(IntentKey.NOTIF_BTN_CLICK_BROADCAST_2)
+//        )
     }
 
+    /** Since onDestroy is not a guarenteed call when app destroyed*/
     override fun onPause() {
         super.onPause()
         if (isServiceBound) {
-            activity?.unbindService(ttsConnection)
+            activity?.unbindService(playerConnection)
             isServiceBound = false
         }
 
         LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(messageReceiver)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        activity?.unbindService(ttsConnection)
-    }
-
-    override fun onInit(p0: Int) {
-        print("Text-To-Speech engine is ready.")
-        tts?.availableLanguages?.forEach { locale: Locale ->
-            if (tts?.isLanguageAvailable(locale) == TextToSpeech.LANG_AVAILABLE) {
-                availableLanguages.add(locale)
-            }
-        }
-        tts?.setLanguage(Locale.US)
-
-        // setOnUtteranceProgressListener must be set after tts is init
-        // https://stackoverflow.com/questions/52233235/setonutteranceprogresslistener-not-at-all-working-for-text-to-speech-for-api-2
-        tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-            override fun onStart(uttId: String?) = Unit
-
-            override fun onDone(uttId: String?) {
-                binding.layoutPersistentBottomSheet.ivPlay.setImageDrawable(context?.drawable(R.drawable.round_play_arrow_24))
-                binding.layoutPersistentBottomSheet.ivHeaderPlay.setImageDrawable(context?.drawable(R.drawable.round_play_arrow_24))
-                if (uttId == TtsTag.UID_SPEAK) {
-                    // do something
-                }
-            }
-
-            override fun onError(uttId: String?) = Unit
-        })
+//        LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(notificationButtonClickReceiver)
     }
 
     private fun FragmentMainBinding.setupUI() {
@@ -303,13 +334,24 @@ class MainFragment : Fragment(), OnInitListener {
 //        ivShield.setMargins(top = (deviceHeight() / 2) - 200.dpToPx().toInt())
         layoutSearch.etSearch.hint = "Search in ${getDownloadDirectory().name}"
         setUpPersistentBottomSheet()
-
-        ttsParams.putString(TextToSpeech.Engine.KEY_PARAM_STREAM, AudioManager.STREAM_ALARM.toString())
         checkTtsExists()
-
-        layoutPersistentBottomSheet.layoutSliderPitch.tvSliderTitle.text = "Pitch"
-        layoutPersistentBottomSheet.layoutSliderSpeed.tvSliderTitle.text = "Speed"
-        layoutPersistentBottomSheet.layoutSliderPlayback.tvSliderTitle.text = "Page"
+        layoutPersistentBottomSheet.layoutSliderPlayback.apply {
+            tvSliderTitle.text = "Page"
+        }
+        layoutPersistentBottomSheet.layoutSliderSpeed.apply {
+            tvSliderTitle.text = "Speed"
+            tvValue.text = TtsConstants.DEFAULT.toString()
+            sliderCustom.min = TtsConstants.MIN
+            sliderCustom.max = TtsConstants.MAX
+            sliderCustom.progress = TtsConstants.DEFAULT
+        }
+        layoutPersistentBottomSheet.layoutSliderPitch.apply {
+            tvSliderTitle.text = "Pitch"
+            tvValue.text = TtsConstants.DEFAULT.toString()
+            sliderCustom.min = TtsConstants.MIN
+            sliderCustom.max = TtsConstants.MAX
+            sliderCustom.progress = TtsConstants.DEFAULT
+        }
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -350,7 +392,7 @@ class MainFragment : Fragment(), OnInitListener {
                             negativeBtnText = "Cancel",
                             positiveBtnColor = R.color.md_red_700,
                             positiveAction = {
-                                stopPlayer()
+                                showPlayerView(false)
                                 bookViewModel.deleteAllBookDataItems()
                                 bookViewModel.deleteAllBookItems()
                                 deleteAllFilesFrom(directory = File(requireContext().getBookCoversFileDir()))
@@ -363,34 +405,19 @@ class MainFragment : Fragment(), OnInitListener {
         }
 
         booksAdapter.setOnItemClickListener { book, position ->
+            if (isTtsPresent.not()) {
+                binding.root.showSnackBar(message = "You don't have \"Text-to-Speech\" feature on your device.")
+                return@setOnItemClickListener
+            }
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 if (activity?.hasNotificationsPermission()?.not() == true) {
                     askNotificationPermission()
                     return@setOnItemClickListener
                 }
             }
-            CoroutineScope(Dispatchers.IO).launch {
-                val bookData = bookViewModel.getBookDataItemById(File(book?.path ?: "").getBookId())
-                currentPlayingBook = book
-                currentPlayingBookData = bookData
 
-                withContext(Dispatchers.Main) {
-                    layoutPersistentBottomSheet.layoutSliderPlayback.apply {
-                        sliderCustom.max = currentPlayingBook?.pageCount ?: 0
-                        tvValue.text = "${sliderCustom.progress}/${currentPlayingBook?.pageCount}"
-                    }
-                    layoutPersistentBottomSheet.root.isVisible = true
-                    layoutPersistentBottomSheet.tvHeader.text = book?.title
-                    layoutPersistentBottomSheet.tvCurrentlyReading.text = bookData.text?.subSequence(
-                        startIndex = 0,
-                        endIndex = bookData.periodPositionsList.firstOrNull() ?: 0
-                    )
-                    speak(startIndex = 0, endIndex = bookData.periodPositionsList.firstOrNull() ?: 0)
-                    startForegroundService(book?.id ?: "")
-                    playBookForegroundService?.playPause(isPlay = true)
-                    bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
-                }
-            }
+            startForegroundService(book)
         }
 
         booksAdapter.setOnItemLongClickListener { book, view, position ->
@@ -407,6 +434,10 @@ class MainFragment : Fragment(), OnInitListener {
                 when (it?.title?.toString()?.trim()) {
                     optionsList[0].first -> {
                         val file = File(book?.path ?: "")
+                        if (file.exists().not()) {
+                            context?.showToast("Could not find the book in ${getDownloadDirectory().name} folder.")
+                            return@showPopupMenuWithIcons
+                        }
                         val uri = FileProvider.getUriForFile(requireContext(), FILE_PROVIDER, file)
                         val intent = Intent().apply {
                             action = Intent.ACTION_VIEW
@@ -540,18 +571,22 @@ class MainFragment : Fragment(), OnInitListener {
         layoutPersistentBottomSheet.layoutSliderPitch.apply {
             ibReduce.setOnClickListener {
                 sliderCustom.progress -= 1
-                tts?.setPitch(sliderCustom.progress.toFloat())
+                playBookForegroundService?.setTtsPitch(sliderCustom.progress.toFloat())
                 tvValue.text = sliderCustom.progress.toString()
+                playBookForegroundService?.stopAndPlayTts()
             }
             ibIncrease.setOnClickListener {
                 sliderCustom.progress += 1
-                tts?.setPitch(sliderCustom.progress.toFloat())
+                playBookForegroundService?.setTtsPitch(sliderCustom.progress.toFloat())
                 tvValue.text = sliderCustom.progress.toString()
+                playBookForegroundService?.stopAndPlayTts()
             }
             sliderCustom.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
                     println("seekbar progress: $progress")
                     tvValue.text = progress.toString()
+                    playBookForegroundService?.setTtsPitch(progress.toFloat())
+                    playBookForegroundService?.stopAndPlayTts()
                 }
 
                 override fun onStartTrackingTouch(seekBar: SeekBar) = Unit
@@ -562,18 +597,22 @@ class MainFragment : Fragment(), OnInitListener {
         layoutPersistentBottomSheet.layoutSliderSpeed.apply {
             ibReduce.setOnClickListener {
                 sliderCustom.progress -= 1
-                tts?.setSpeechRate(sliderCustom.progress.toFloat())
+                playBookForegroundService?.setTtsSpeechRate(sliderCustom.progress.toFloat())
                 tvValue.text = sliderCustom.progress.toString()
+                playBookForegroundService?.stopAndPlayTts()
             }
             ibIncrease.setOnClickListener {
                 sliderCustom.progress += 1
-                tts?.setSpeechRate(sliderCustom.progress.toFloat())
+                playBookForegroundService?.setTtsSpeechRate(sliderCustom.progress.toFloat())
                 tvValue.text = sliderCustom.progress.toString()
+                playBookForegroundService?.stopAndPlayTts()
             }
             sliderCustom.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
                     println("seekbar progress: $progress")
                     tvValue.text = progress.toString()
+                    playBookForegroundService?.setTtsSpeechRate(progress.toFloat())
+                    playBookForegroundService?.stopAndPlayTts()
                 }
 
                 override fun onStartTrackingTouch(seekBar: SeekBar) = Unit
@@ -582,10 +621,19 @@ class MainFragment : Fragment(), OnInitListener {
         }
 
         layoutPersistentBottomSheet.layoutSliderPlayback.apply {
+            var oldProgress = 0
             sliderCustom.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
                     println("seekbar progress: $progress")
-                    tvValue.text = "${progress}/${currentPlayingBook?.pageCount}"
+                    tvValue.text = "${progress}/${playBookForegroundService?.getCurrentPlayingBook()?.pageCount}"
+                    if (progress > oldProgress) {
+                        playBookForegroundService?.nextPage(pagePosition = progress)
+                    } else {
+                        playBookForegroundService?.previousPage(pagePosition = progress)
+                    }
+                    oldProgress = progress
+                    Log.d(TAG, progress.toString())
+                    Log.d(TAG, oldProgress.toString())
                 }
 
                 override fun onStartTrackingTouch(seekBar: SeekBar) = Unit
@@ -594,17 +642,7 @@ class MainFragment : Fragment(), OnInitListener {
         }
 
         layoutPersistentBottomSheet.ivPlay.setOnClickListener {
-//            if (tts?.isSpeaking == true) {
-//                tts?.stop()
-//            } else {
-//                speak(startIndex = 0, endIndex = currentPlayingBookData?.periodPositionsList?.firstOrNull() ?: 0)
-//            }
-            if (playBookForegroundService?.getTts()?.isSpeaking == true) {
-                playBookForegroundService?.playPause(isPlay = false)
-            } else {
-                playBookForegroundService?.playPause(isPlay = true)
-            }
-            setPlaybackViewState()
+            playBookForegroundService?.playPauseTts()
         }
 
         layoutPersistentBottomSheet.ivHeaderPlay.setOnClickListener {
@@ -613,29 +651,31 @@ class MainFragment : Fragment(), OnInitListener {
 
         layoutPersistentBottomSheet.ibNextSentence.setOnClickListener {
             playBookForegroundService?.nextSentence()
-            tts?.speak("text to speak", TextToSpeech.QUEUE_FLUSH, ttsParams, "")
         }
 
         layoutPersistentBottomSheet.ibPreviousSentence.setOnClickListener {
             playBookForegroundService?.previousSentence()
-            tts?.speak("text to speak", TextToSpeech.QUEUE_FLUSH, ttsParams, "")
         }
 
         layoutPersistentBottomSheet.ibNextPage.setOnClickListener {
             playBookForegroundService?.nextPage()
-            tts?.speak("text to speak", TextToSpeech.QUEUE_FLUSH, ttsParams, "")
+            layoutPersistentBottomSheet.layoutSliderPlayback.sliderCustom.progress += 1
         }
 
         layoutPersistentBottomSheet.ibPreviousPage.setOnClickListener {
             playBookForegroundService?.previousPage()
-            tts?.speak("text to speak", TextToSpeech.QUEUE_FLUSH, ttsParams, "")
+            layoutPersistentBottomSheet.layoutSliderPlayback.sliderCustom.progress -= 1
         }
 
         layoutPersistentBottomSheet.ivHeaderMore.setOnClickListener { view: View? ->
-            val ttsLanguageList = availableLanguages.map { Pair(it.displayName, R.drawable.round_check_24) }
+            val ttsLanguageList = playBookForegroundService?.getAvailableTtsLanguages()?.map {
+                Pair(it.displayName, R.drawable.round_check_24)
+            } ?: emptyList()
             val optionsList = listOf(
+                Pair("Copy Sentence", R.drawable.baseline_content_copy_24),
                 Pair("Select Language", R.drawable.round_language_24),
-                Pair("Save as audio file", R.drawable.outline_audio_file_24),
+                Pair("Reset Settings", R.drawable.round_settings_backup_restore_24),
+//                Pair("Save as audio file", R.drawable.outline_audio_file_24),
                 Pair("Settings", R.drawable.outline_settings_24),
                 Pair("Stop Playing", R.drawable.outline_cancel_24),
             )
@@ -647,57 +687,72 @@ class MainFragment : Fragment(), OnInitListener {
             ) { it: MenuItem? ->
                 when (it?.title?.toString()?.trim()) {
                     optionsList[0].first -> {
-                        requireContext().showSingleSelectionPopupMenu(
-                            view = layoutPersistentBottomSheet.ivHeaderMore,
-                            title = "Select Language",
-                            selectedOption = selectedTtsLanguage,
-                            menuList = ttsLanguageList,
-                        ) { menuItem: MenuItem? ->
-                            selectedTtsLanguage = menuItem?.title?.toString()?.trim() ?: ""
-                            tts?.setLanguage(Locale(selectedTtsLanguage))
-                        }
+                        context.clipboard()?.text = playBookForegroundService?.getCurrentlyPlayingText()
                     }
 
                     optionsList[1].first -> {
-//                        saveAsAudioFile()
+                        requireContext().showSingleSelectionPopupMenu(
+                            view = layoutPersistentBottomSheet.ivHeaderMore,
+                            title = "Select Language",
+                            selectedOption = selectedTtsLanguage?.displayName,
+                            menuList = ttsLanguageList,
+                        ) { menuItem: MenuItem? ->
+                            val selectedLangIndex = ttsLanguageList.indexOfFirst { it.first == (menuItem?.title?.toString()?.trim() ?: "") }
+                            selectedTtsLanguage = playBookForegroundService?.getAvailableTtsLanguages()?.get(selectedLangIndex)
+                            playBookForegroundService?.setTtsLanguage(selectedTtsLanguage ?: Locale.getDefault())
+                            playBookForegroundService?.stopAndPlayTts()
+                        }
                     }
 
+//                    optionsList[1].first -> {
+//                        playBookForegroundService?.saveAsAudioFile()
+//                    }
+
                     optionsList[2].first -> {
-                        activity?.showTtsSettings()
+                        binding.setTtsDefaultSettings()
                     }
 
                     optionsList[3].first -> {
-                        playBookForegroundService?.stopForegroundService()
+                        activity?.showTtsSettings()
+                    }
+
+                    optionsList[4].first -> {
+//                        stopForegroundService()
+                        playBookForegroundService?.stopTts()
                         bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
-                        layoutPersistentBottomSheet.root.isVisible = false
+                        showPlayerView(false)
                     }
                 }
             }
         }
     }
 
-    private fun FragmentMainBinding.setPlaybackViewState() {
-        if (playBookForegroundService?.getTts()?.isSpeaking == true) {
-            layoutPersistentBottomSheet.ivPlay.setImageDrawable(context?.drawable(R.drawable.round_play_arrow_24))
-            layoutPersistentBottomSheet.ivHeaderPlay.setImageDrawable(context?.drawable(R.drawable.round_play_arrow_24))
-        } else {
-            layoutPersistentBottomSheet.ivPlay.setImageDrawable(context?.drawable(R.drawable.round_pause_24))
-            layoutPersistentBottomSheet.ivHeaderPlay.setImageDrawable(context?.drawable(R.drawable.round_pause_24))
+    private fun FragmentMainBinding.setTtsDefaultSettings() {
+        layoutPersistentBottomSheet.layoutSliderSpeed.apply {
+            tvValue.text = TtsConstants.DEFAULT.toString()
+            sliderCustom.progress = TtsConstants.DEFAULT
         }
+        layoutPersistentBottomSheet.layoutSliderPitch.apply {
+            tvValue.text = TtsConstants.DEFAULT.toString()
+            sliderCustom.progress = TtsConstants.DEFAULT
+        }
+        playBookForegroundService?.setTtsPitch(TtsConstants.DEFAULT.toFloat())
+        playBookForegroundService?.setTtsSpeechRate(TtsConstants.DEFAULT.toFloat())
+        playBookForegroundService?.setTtsLanguage(Locale.getDefault())
+        selectedTtsLanguage = Locale.getDefault()
+        playBookForegroundService?.stopAndPlayTts()
     }
 
-    private fun speak(startIndex: Int, endIndex: Int) {
-        val text = if (endIndex - startIndex > TextToSpeech.getMaxSpeechInputLength()) {
-            "Sentence is too long."
-        } else {
-            currentPlayingBookData?.text?.subSequence(startIndex, endIndex)
+    private fun FragmentMainBinding.doWhenForegroundServiceIsReady() {
+        // This must be set after player is ready with book data
+        layoutPersistentBottomSheet.layoutSliderPlayback.apply {
+            sliderCustom.max = playBookForegroundService?.getCurrentPlayingBook()?.pageCount ?: 0
+            tvValue.text = "${sliderCustom.progress}/${playBookForegroundService?.getCurrentPlayingBook()?.pageCount}"
         }
-        tts?.speak(
-            /* text = */ text,
-            /* queueMode = */ TextToSpeech.QUEUE_FLUSH,
-            /* params = */ ttsParams,
-            /* utteranceId = */ TtsTag.UID_SPEAK
-        )
+        showPlayerView(true)
+        layoutPersistentBottomSheet.tvHeader.text = playBookForegroundService?.getCurrentPlayingBook()?.title
+
+        bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
     }
 
     @SuppressLint("InlinedApi")
@@ -720,23 +775,31 @@ class MainFragment : Fragment(), OnInitListener {
         }
     }
 
-    private fun startForegroundService(bookId: String) {
-        if (playBookForegroundService != null) return
-
+    private fun startForegroundService(book: Book?) {
+        if (playBookForegroundService != null) {
+            playBookForegroundService?.stopTts()
+            playBookForegroundService?.loadData(book?.id ?: "")
+            return
+        }
         val intent = Intent(context, PlayBookForegroundService::class.java).apply {
-            putExtra(IntentExtraKey.BOOK_ID, bookId)
+            putExtra(IntentExtraKey.BOOK_ID, book?.id ?: "")
         }
         activity?.application?.startForegroundService(intent)
         // bind to the service to update UI
-        activity?.bindService(intent, ttsConnection, Context.BIND_AUTO_CREATE)
+        activity?.bindService(intent, playerConnection, Context.BIND_AUTO_CREATE)
     }
 
     private fun stopForegroundService() {
         playBookForegroundService?.stopForegroundService()
     }
 
-    private fun stopPlayer() {
-        binding.layoutPersistentBottomSheet.root.isVisible = false
+    private fun showPlayerView(isShow: Boolean) {
+        requireActivity().window.navigationBarColor = if (isShow) {
+            requireContext().getColor(R.color.purple_700)
+        } else {
+            requireContext().getColor(R.color.white)
+        }
+        binding.layoutPersistentBottomSheet.root.isVisible = isShow
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -788,15 +851,6 @@ class MainFragment : Fragment(), OnInitListener {
         ttsLauncher.launch(intent)
     }
 
-    /** Any call to speak() for the same string content as wakeUpText will result in the playback of destFileName.
-     * This is done to avoid synthesizing text in tts again and save resources.
-     * You can provide custom audio file as path as well */
-    private fun playSavedAudioFile() {
-        val wakeUpText = "Are you up yet?"
-        val destFile = File("/sdcard/myAppCache/wakeUp.wav")
-        tts?.addSpeech(wakeUpText, destFile)
-    }
-
     private fun setUpPersistentBottomSheet() {
         binding.layoutPersistentBottomSheet.cardCurrentlyReading.layoutParams.height = deviceHeight() / 3
         binding.layoutPersistentBottomSheet.layoutSliderPlayback.apply {
@@ -825,6 +879,7 @@ class MainFragment : Fragment(), OnInitListener {
             if (workInfo != null) {
                 val progress = workInfo.progress.getInt(WorkerData.KEY_PROGRESS, 0)
                 binding.tvProgress.text = progress.toString()
+                binding.progressCircular.progress = progress
             }
             when (workInfo?.state) {
                 WorkInfo.State.RUNNING -> showProgressBar(true)
