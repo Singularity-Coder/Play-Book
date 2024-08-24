@@ -13,7 +13,9 @@ import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.speech.tts.TextToSpeech
 import android.text.Editable
 import android.text.Spannable
@@ -71,6 +73,7 @@ import com.singularitycoder.playbooks.helpers.hasPdfs
 import com.singularitycoder.playbooks.helpers.hasStoragePermission
 import com.singularitycoder.playbooks.helpers.hideKeyboard
 import com.singularitycoder.playbooks.helpers.layoutAnimationController
+import com.singularitycoder.playbooks.helpers.milliSeconds
 import com.singularitycoder.playbooks.helpers.onImeClick
 import com.singularitycoder.playbooks.helpers.onSafeClick
 import com.singularitycoder.playbooks.helpers.requestStoragePermission
@@ -87,6 +90,7 @@ import com.singularitycoder.playbooks.helpers.showTtsSettings
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -128,39 +132,6 @@ class MainFragment : Fragment() {
     private var playBookForegroundService: PlayBookForegroundService? = null
 
     private var isServiceBound = false
-
-//    private val notificationButtonClickReceiver: BroadcastReceiver = object : BroadcastReceiver() {
-//        override fun onReceive(context: Context, intent: Intent) {
-//            if (intent.action != IntentKey.NOTIF_BTN_CLICK_BROADCAST_2) return
-//            val actionExtra = intent.getStringExtra(IntentExtraKey.NOTIF_BTN_CLICK_TYPE_2)
-//            when (actionExtra) {
-//                NotificationAction.PLAY_PAUSE.name -> {
-//                    Log.d(TAG, "PLAY_PAUSE CLICK")
-//                    playBookForegroundService?.playPauseTts()
-//                }
-//
-//                NotificationAction.PREVIOUS_SENTENCE.name -> {
-//                    Log.d(TAG, "PREVIOUS_SENTENCE CLICK")
-//                    playBookForegroundService?.previousSentence()
-//                }
-//
-//                NotificationAction.NEXT_SENTENCE.name -> {
-//                    Log.d(TAG, "NEXT_SENTENCE CLICK")
-//                    playBookForegroundService?.nextSentence()
-//                }
-//
-//                NotificationAction.PREVIOUS_PAGE.name -> {
-//                    Log.d(TAG, "PREVIOUS_PAGE CLICK")
-//                    playBookForegroundService?.previousPage()
-//                }
-//
-//                NotificationAction.NEXT_PAGE.name -> {
-//                    Log.d(TAG, "NEXT_PAGE CLICK")
-//                    playBookForegroundService?.nextPage()
-//                }
-//            }
-//        }
-//    }
 
     private val messageReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -304,10 +275,6 @@ class MainFragment : Fragment() {
             /* receiver = */ messageReceiver,
             /* filter = */ IntentFilter(IntentKey.MAIN_BROADCAST_FROM_SERVICE)
         )
-//        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(
-//            /* receiver = */ notificationButtonClickReceiver,
-//            /* filter = */ IntentFilter(IntentKey.NOTIF_BTN_CLICK_BROADCAST_2)
-//        )
     }
 
     /** Since onDestroy is not a guarenteed call when app destroyed*/
@@ -319,7 +286,6 @@ class MainFragment : Fragment() {
         }
 
         LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(messageReceiver)
-//        LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(notificationButtonClickReceiver)
     }
 
     private fun FragmentMainBinding.setupUI() {
@@ -569,13 +535,15 @@ class MainFragment : Fragment() {
 //        }
 
         layoutPersistentBottomSheet.layoutSliderPitch.apply {
-            ibReduce.setOnClickListener {
+            val pitchScrubHandler = Handler(Looper.getMainLooper())
+            var pitchScrubRunnable: java.lang.Runnable = Runnable {}
+            ibReduce.onSafeClick {
                 sliderCustom.progress -= 1
                 playBookForegroundService?.setTtsPitch(sliderCustom.progress.toFloat())
                 tvValue.text = sliderCustom.progress.toString()
                 playBookForegroundService?.stopAndPlayTts()
             }
-            ibIncrease.setOnClickListener {
+            ibIncrease.onSafeClick {
                 sliderCustom.progress += 1
                 playBookForegroundService?.setTtsPitch(sliderCustom.progress.toFloat())
                 tvValue.text = sliderCustom.progress.toString()
@@ -585,8 +553,12 @@ class MainFragment : Fragment() {
                 override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
                     println("seekbar progress: $progress")
                     tvValue.text = progress.toString()
-                    playBookForegroundService?.setTtsPitch(progress.toFloat())
-                    playBookForegroundService?.stopAndPlayTts()
+                    pitchScrubHandler.removeCallbacks(pitchScrubRunnable)
+                    pitchScrubRunnable = Runnable {
+                        playBookForegroundService?.setTtsPitch(progress.toFloat())
+                        playBookForegroundService?.stopAndPlayTts()
+                    }
+                    pitchScrubHandler.postDelayed(pitchScrubRunnable, 1000.milliSeconds())
                 }
 
                 override fun onStartTrackingTouch(seekBar: SeekBar) = Unit
@@ -595,13 +567,15 @@ class MainFragment : Fragment() {
         }
 
         layoutPersistentBottomSheet.layoutSliderSpeed.apply {
-            ibReduce.setOnClickListener {
+            val speechRateScrubHandler = Handler(Looper.getMainLooper())
+            var speechRateScrubRunnable: java.lang.Runnable = Runnable {}
+            ibReduce.onSafeClick {
                 sliderCustom.progress -= 1
                 playBookForegroundService?.setTtsSpeechRate(sliderCustom.progress.toFloat())
                 tvValue.text = sliderCustom.progress.toString()
                 playBookForegroundService?.stopAndPlayTts()
             }
-            ibIncrease.setOnClickListener {
+            ibIncrease.onSafeClick {
                 sliderCustom.progress += 1
                 playBookForegroundService?.setTtsSpeechRate(sliderCustom.progress.toFloat())
                 tvValue.text = sliderCustom.progress.toString()
@@ -611,8 +585,12 @@ class MainFragment : Fragment() {
                 override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
                     println("seekbar progress: $progress")
                     tvValue.text = progress.toString()
-                    playBookForegroundService?.setTtsSpeechRate(progress.toFloat())
-                    playBookForegroundService?.stopAndPlayTts()
+                    speechRateScrubHandler.removeCallbacks(speechRateScrubRunnable)
+                    speechRateScrubRunnable = Runnable {
+                        playBookForegroundService?.setTtsSpeechRate(progress.toFloat())
+                        playBookForegroundService?.stopAndPlayTts()
+                    }
+                    speechRateScrubHandler.postDelayed(speechRateScrubRunnable, 1000.milliSeconds())
                 }
 
                 override fun onStartTrackingTouch(seekBar: SeekBar) = Unit
@@ -622,18 +600,24 @@ class MainFragment : Fragment() {
 
         layoutPersistentBottomSheet.layoutSliderPlayback.apply {
             var oldProgress = 0
+            val pageScrubHandler = Handler(Looper.getMainLooper())
+            var pageScrubRunnable: java.lang.Runnable = Runnable {}
             sliderCustom.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
                     println("seekbar progress: $progress")
                     tvValue.text = "${progress}/${playBookForegroundService?.getCurrentPlayingBook()?.pageCount}"
-                    if (progress > oldProgress) {
-                        playBookForegroundService?.nextPage(pagePosition = progress)
-                    } else {
-                        playBookForegroundService?.previousPage(pagePosition = progress)
+                    pageScrubHandler.removeCallbacks(pageScrubRunnable)
+                    pageScrubRunnable = Runnable {
+                        if (progress > oldProgress) {
+                            playBookForegroundService?.nextPage(pagePosition = progress)
+                        } else {
+                            playBookForegroundService?.previousPage(pagePosition = progress)
+                        }
                     }
+                    pageScrubHandler.postDelayed(pageScrubRunnable, 1000.milliSeconds())
                     oldProgress = progress
-                    Log.d(TAG, progress.toString())
-                    Log.d(TAG, oldProgress.toString())
+//                    Log.d(TAG, progress.toString())
+//                    Log.d(TAG, oldProgress.toString())
                 }
 
                 override fun onStartTrackingTouch(seekBar: SeekBar) = Unit
@@ -641,28 +625,28 @@ class MainFragment : Fragment() {
             })
         }
 
-        layoutPersistentBottomSheet.ivPlay.setOnClickListener {
+        layoutPersistentBottomSheet.ivPlay.onSafeClick {
             playBookForegroundService?.playPauseTts()
         }
 
-        layoutPersistentBottomSheet.ivHeaderPlay.setOnClickListener {
+        layoutPersistentBottomSheet.ivHeaderPlay.onSafeClick {
             layoutPersistentBottomSheet.ivPlay.performClick()
         }
 
-        layoutPersistentBottomSheet.ibNextSentence.setOnClickListener {
+        layoutPersistentBottomSheet.ibNextSentence.onSafeClick {
             playBookForegroundService?.nextSentence()
         }
 
-        layoutPersistentBottomSheet.ibPreviousSentence.setOnClickListener {
+        layoutPersistentBottomSheet.ibPreviousSentence.onSafeClick {
             playBookForegroundService?.previousSentence()
         }
 
-        layoutPersistentBottomSheet.ibNextPage.setOnClickListener {
+        layoutPersistentBottomSheet.ibNextPage.onSafeClick {
             playBookForegroundService?.nextPage()
             layoutPersistentBottomSheet.layoutSliderPlayback.sliderCustom.progress += 1
         }
 
-        layoutPersistentBottomSheet.ibPreviousPage.setOnClickListener {
+        layoutPersistentBottomSheet.ibPreviousPage.onSafeClick {
             playBookForegroundService?.previousPage()
             layoutPersistentBottomSheet.layoutSliderPlayback.sliderCustom.progress -= 1
         }
