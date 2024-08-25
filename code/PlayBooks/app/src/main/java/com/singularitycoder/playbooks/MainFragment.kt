@@ -144,19 +144,7 @@ class MainFragment : Fragment() {
                 }
 
                 IntentExtraValue.TTS_PLAYING -> {
-                    binding.layoutPersistentBottomSheet.ivPlay.setImageDrawable(context.drawable(R.drawable.round_pause_24))
-                    binding.layoutPersistentBottomSheet.ivHeaderPlay.setImageDrawable(context.drawable(R.drawable.round_pause_24))
-                    binding.layoutPersistentBottomSheet.layoutSliderPlayback.apply {
-//                        sliderCustom.progress = playBookForegroundService?.getCurrentPeriodPosition() ?: 0
-                        tvValue.text = "${sliderCustom.progress}/${playBookForegroundService?.getCurrentPlayingBook()?.pageCount}"
-                        sliderCustom.min = 1
-                        sliderCustom.max = playBookForegroundService?.getCurrentPlayingBook()?.pageCount ?: 0
-                    }
-                    val bookCover = File(
-                        /* parent = */ context.getBookCoversFileDir(),
-                        /* child = */ "${playBookForegroundService?.getCurrentPlayingBook()?.id}.jpg"
-                    )
-                    binding.layoutPersistentBottomSheet.ivHeaderImage.load(bookCover)
+                    doWhenTtsIsPlaying(context)
                 }
 
                 IntentExtraValue.TTS_PAUSED -> {
@@ -315,6 +303,14 @@ class MainFragment : Fragment() {
             sliderCustom.min = TtsConstants.MIN
             sliderCustom.max = TtsConstants.MAX
             sliderCustom.progress = AppPreferences.getInstance().ttsPitch
+        }
+        /** This will make sure that when u kill the app & relaunch it u will still see the player view reading the right book */
+        if (PlayBookForegroundService.playBookForegroundService != null &&
+            PlayBookForegroundService.playBookForegroundService?.isTtsSpeaking() == true
+        ) {
+            playBookForegroundService = PlayBookForegroundService.playBookForegroundService
+            showPlayerView(isShow = true)
+            doWhenTtsIsPlaying(requireContext())
         }
     }
 
@@ -647,7 +643,7 @@ class MainFragment : Fragment() {
             val optionsList = listOf(
                 Pair("Copy Sentence", R.drawable.baseline_content_copy_24),
                 Pair("Select Language", R.drawable.round_language_24),
-                Pair("Reset Settings", R.drawable.round_settings_backup_restore_24),
+                Pair("Reset Speech Settings", R.drawable.round_settings_backup_restore_24),
 //                Pair("Save as audio file", R.drawable.outline_audio_file_24),
                 Pair("Settings", R.drawable.outline_settings_24),
                 Pair("Stop Playing", R.drawable.outline_cancel_24),
@@ -705,6 +701,23 @@ class MainFragment : Fragment() {
         }
     }
 
+    private fun doWhenTtsIsPlaying(context: Context) {
+        binding.layoutPersistentBottomSheet.ivPlay.setImageDrawable(context.drawable(R.drawable.round_pause_24))
+        binding.layoutPersistentBottomSheet.ivHeaderPlay.setImageDrawable(context.drawable(R.drawable.round_pause_24))
+        binding.layoutPersistentBottomSheet.tvHeader.text = playBookForegroundService?.getCurrentPlayingBook()?.title
+        binding.layoutPersistentBottomSheet.layoutSliderPlayback.apply {
+            // sliderCustom.progress = playBookForegroundService?.getCurrentPeriodPosition() ?: 0
+            tvValue.text = "${sliderCustom.progress}/${playBookForegroundService?.getCurrentPlayingBook()?.pageCount}"
+            sliderCustom.min = 1
+            sliderCustom.max = playBookForegroundService?.getCurrentPlayingBook()?.pageCount ?: 0
+        }
+        val bookCover = File(
+            /* parent = */ context.getBookCoversFileDir(),
+            /* child = */ "${playBookForegroundService?.getCurrentPlayingBook()?.id}.jpg"
+        )
+        binding.layoutPersistentBottomSheet.ivHeaderImage.load(bookCover)
+    }
+
     private fun FragmentMainBinding.setTtsDefaultSettings() {
         layoutPersistentBottomSheet.layoutSliderSpeed.apply {
             tvValue.text = TtsConstants.DEFAULT.toString()
@@ -719,6 +732,7 @@ class MainFragment : Fragment() {
         playBookForegroundService?.setTtsLanguage(Locale.getDefault())
         selectedTtsLanguage = Locale.getDefault().displayName
         playBookForegroundService?.stopAndPlayTts()
+        context?.showToast("Speech settings reset")
     }
 
     private fun FragmentMainBinding.doWhenForegroundServiceIsReady() {

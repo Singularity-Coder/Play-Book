@@ -1,8 +1,7 @@
 TODO FEATURES:--------------------------------------------------
 
-page slider
-on app killed tts is playing but on restart its resetting
-store speech rate, pitch, language, current read page positions in shared prefs
+page slider not correct
+store current read page positions in db
 Show instructions on how to convert ebook formats to pdf online
 Skip book option in loader to skip books that take too long to convert
 

@@ -42,6 +42,7 @@ import java.util.Locale
 class PlayBookForegroundService : Service() {
     companion object {
         private val TAG = this::class.java.simpleName
+        var playBookForegroundService: PlayBookForegroundService? = null
     }
 
     @EntryPoint
@@ -118,6 +119,7 @@ class PlayBookForegroundService : Service() {
     override fun onCreate() {
         super.onCreate()
         Log.d(TAG, "onCreate - First")
+        playBookForegroundService = this
         localBroadcastManager = LocalBroadcastManager.getInstance(this)
         localBroadcastManager?.registerReceiver(
             /* receiver = */ notificationButtonClickReceiver,
@@ -205,6 +207,7 @@ class PlayBookForegroundService : Service() {
         super.onDestroy()
         Log.d(TAG, "onDestroy")
         localBroadcastManager?.unregisterReceiver(notificationButtonClickReceiver)
+        // playBookForegroundService = null
         // tts.shutdown
     }
 
@@ -468,4 +471,6 @@ class PlayBookForegroundService : Service() {
     fun getCurrentPeriodPosition(): Int = currentPeriodPosition
 
     fun getCurrentlyPlayingText(): CharSequence? = currentlyPlayingText
+
+    fun isTtsSpeaking(): Boolean? = tts?.isSpeaking
 }
