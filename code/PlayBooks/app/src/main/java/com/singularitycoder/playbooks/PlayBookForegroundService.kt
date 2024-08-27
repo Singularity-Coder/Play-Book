@@ -77,6 +77,8 @@ class PlayBookForegroundService : Service() {
 
     private var bookCoverBitmap: Bitmap? = null
 
+    private var pagePosition = 0
+
     /** This receiver should be here as when app is killed this service must be self sufficient and cannot depend on killed app resources */
     private val notificationButtonClickReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -208,6 +210,7 @@ class PlayBookForegroundService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         Log.d(TAG, "onDestroy")
+        updateCompletedPagePositionToDb()
         localBroadcastManager?.unregisterReceiver(notificationButtonClickReceiver)
         // playBookForegroundService = null
         // tts.shutdown
@@ -258,7 +261,6 @@ class PlayBookForegroundService : Service() {
 
     fun loadData(bookId: String?) {
         this.bookId = bookId
-        currentPeriodPosition = -1
         CoroutineScope(Dispatchers.IO).launch {
             currentPlayingBook = bookDao?.getItemById(bookId ?: "")
             currentPlayingBookData = bookDataDao?.getItemById(bookId ?: "")
@@ -266,12 +268,14 @@ class PlayBookForegroundService : Service() {
                 /* parent = */ this@PlayBookForegroundService.getBookCoversFileDir(),
                 /* child = */ "${currentPlayingBook?.id}.jpg"
             ).toBitmap()
+            currentPeriodPosition = currentPlayingBook?.completedPagePosition ?: -1
+            pagePosition = currentPlayingBookData?.periodToPageMap?.get(currentPeriodPosition) ?: 0
 
             withContext(Dispatchers.Main) {
                 sendBroadcastToMain(IntentExtraValue.FOREGROUND_SERVICE_READY)
                 speak(
-                    startIndex = 0,
-                    endIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(0) ?: 0
+                    startIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPlayingBook?.completedPagePosition ?: 0) ?: 0,
+                    endIndex = currentPlayingBookData?.periodPositionsList?.getOrNull((currentPlayingBook?.completedPagePosition ?: 0) + 1) ?: 0
                 )
                 updatePlayerPlayingState()
             }
@@ -305,16 +309,16 @@ class PlayBookForegroundService : Service() {
 //        }
 //        Log.d("POSITIONSSSSSS:", "$newStartIndex $newEndIndex")
         CoroutineScope(Dispatchers.Main).launch {
+            /** startIndex + 1 to avoid reading periods "." */
+            val modifiedStartIndex = if (currentPlayingBookData?.text?.get(startIndex) == '.') {
+                startIndex + 1
+            } else {
+                startIndex
+            }
             val text = try {
                 if (endIndex - startIndex > TextToSpeech.getMaxSpeechInputLength()) {
-                    "Sentence is too long. Skipping to next sentence."
+                    currentPlayingBookData?.text?.subSequence(modifiedStartIndex, TextToSpeech.getMaxSpeechInputLength() - 2)
                 } else {
-                    /** startIndex + 1 to avoid reading periods "." */
-                    val modifiedStartIndex = if (currentPlayingBookData?.text?.get(startIndex) == '.') {
-                        startIndex + 1
-                    } else {
-                        startIndex
-                    }
                     currentPlayingBookData?.text?.subSequence(modifiedStartIndex, endIndex)
                 }
             } catch (_: Exception) {
@@ -382,11 +386,22 @@ class PlayBookForegroundService : Service() {
             title = currentPlayingBook?.title,
             image = bookCoverBitmap
         )
+        updateCompletedPagePositionToDb()
+    }
+
+    fun updateCompletedPagePositionToDb() {
+        CoroutineScope(Dispatchers.IO).launch {
+            bookDao?.updateCompletedPageWithId(
+                completedPage = currentPeriodPosition,
+                id = currentPlayingBook?.id ?: ""
+            )
+        }
     }
 
     fun stopTts() {
         if (tts?.isSpeaking == true) {
             tts?.stop()
+            updateCompletedPagePositionToDb()
         }
     }
 
@@ -478,7 +493,11 @@ class PlayBookForegroundService : Service() {
 
     fun getCurrentPlayingBook(): Book? = currentPlayingBook
 
+    fun getCurrentPlayingBookData(): BookData? = currentPlayingBookData
+
     fun getCurrentPeriodPosition(): Int = currentPeriodPosition
+
+    fun getCurrentPagePosition(): Int = pagePosition
 
     fun getCurrentlyPlayingText(): CharSequence? = currentlyPlayingText
 

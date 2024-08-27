@@ -26,6 +26,8 @@ class BookViewModel @Inject constructor(
 
     suspend fun getBookDataItemById(id: String) = bookDataDao.getItemById(id)
 
+    suspend fun updateCompletedPageWithId(completedPage: Int, id: String) = bookDao.updateCompletedPageWithId(completedPage, id)
+
 //    suspend fun getLast3BookItems() = bookDao.getLast3By()
 
     fun deleteBookItem(book: Book?) = viewModelScope.launch {

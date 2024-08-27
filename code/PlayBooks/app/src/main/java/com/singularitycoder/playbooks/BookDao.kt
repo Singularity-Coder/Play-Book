@@ -1,7 +1,13 @@
 package com.singularitycoder.playbooks
 
 import androidx.lifecycle.LiveData
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Transaction
+import androidx.room.Update
 import com.singularitycoder.playbooks.helpers.DbTable
 import kotlinx.coroutines.flow.Flow
 
@@ -26,8 +32,8 @@ interface BookDao {
     @Update(onConflict = OnConflictStrategy.REPLACE)
     suspend fun update(book: Book)
 
-//    @Query("UPDATE ${Table.BOOK} SET link = :link WHERE website LIKE :website")
-//    fun updateLinkWithWebsite(link: String?, website: String)
+    @Query("UPDATE ${DbTable.BOOK} SET completedPagePosition = :completedPage WHERE id LIKE :id")
+    suspend fun updateCompletedPageWithId(completedPage: Int, id: String)
 
     @Query("SELECT * FROM ${DbTable.BOOK} WHERE id LIKE :id LIMIT 1")
     suspend fun getItemById(id: String): Book

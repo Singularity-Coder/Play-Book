@@ -21,6 +21,7 @@ abstract class ThisAppTypeConverter<T> {
 }
 
 class StringListConverter : ThisAppTypeConverter<String>()
+
 class IntListConverter {
     @TypeConverter
     fun fromListInt(list: List<Int>): String {
@@ -31,5 +32,13 @@ class IntListConverter {
     fun toListInt(data: String): List<Int> {
         return listOf(*data.split(",").map { it.toInt() }.toTypedArray())
     }
+}
 
+class IntHashMapConverter {
+    @TypeConverter
+    fun fromHashMap(value: HashMap<Int, Int>): String = PlayBookUtils.gson.toJson(value)
+
+    @TypeConverter
+    fun toHashMap(value: String): HashMap<Int, Int> =
+        PlayBookUtils.gson.fromJson(value, object : TypeToken<Map<Int, Int>>() {}.type)
 }

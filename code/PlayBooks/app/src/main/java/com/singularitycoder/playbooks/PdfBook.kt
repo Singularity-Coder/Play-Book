@@ -8,5 +8,6 @@ data class PdfBook(
     var pageCount: Int = 0,
     var text: String? = "",
     var periodCountPerPageList: List<Int>,
-    var periodPositionsList: List<Int>
+    var periodPositionsList: List<Int>,
+    var periodToPageMap: HashMap<Int, Int>
 ) : Parcelable

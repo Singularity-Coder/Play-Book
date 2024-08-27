@@ -123,7 +123,8 @@ class PdfToTextWorker(val context: Context, workerParams: WorkerParameters) : Co
             text = pdfBook.text,
             pageCount = pdfBook.pageCount,
             periodCountPerPageList = pdfBook.periodCountPerPageList,
-            periodPositionsList = pdfBook.periodPositionsList
+            periodPositionsList = pdfBook.periodPositionsList,
+            periodToPageMap = pdfBook.periodToPageMap
         )
     }
 
@@ -134,6 +135,7 @@ class PdfToTextWorker(val context: Context, workerParams: WorkerParameters) : Co
         var parsedText = ""
         val periodCountPerPageList = mutableListOf<Int>()
         val periodPositionsList = mutableListOf<Int>()
+        val periodToPageMap = HashMap<Int, Int>()
         val reader = PdfReader(this.absolutePath)
         for (i in 0 until reader.numberOfPages) {
             val pageString = PdfTextExtractor.getTextFromPage(reader, i + 1)
@@ -142,6 +144,8 @@ class PdfToTextWorker(val context: Context, workerParams: WorkerParameters) : Co
                 if (char == '.') {
                     periodCountPerPage++
                     periodPositionsList.add(parsedText.length + index)
+                    /** Map period position to page */
+                    periodToPageMap[parsedText.length + index] = i
                 }
             }
             // Extracting the content from different pages - add new lines if necessary - "$parsedText${pageString.trim { it <= ' ' }}\n\n\n\n"
@@ -154,7 +158,8 @@ class PdfToTextWorker(val context: Context, workerParams: WorkerParameters) : Co
             pageCount = reader.numberOfPages,
             text = parsedText.replace("\n", " "),
             periodCountPerPageList = periodCountPerPageList,
-            periodPositionsList = periodPositionsList
+            periodPositionsList = periodPositionsList,
+            periodToPageMap = periodToPageMap
         )
     } catch (_: Exception) {
         null

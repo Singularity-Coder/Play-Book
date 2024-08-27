@@ -44,7 +44,6 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        AppPreferences.init(this)
         showScreen(
             fragment = MainFragment.newInstance(""),
             tag = FragmentsTag.MAIN,

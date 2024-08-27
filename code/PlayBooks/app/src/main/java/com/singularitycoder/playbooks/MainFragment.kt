@@ -114,7 +114,7 @@ class MainFragment : Fragment() {
         }
     }
 
-    protected var previousConfig: Configuration? = null
+    private var previousConfig: Configuration? = null
 
     private var topicParam: String? = null
 
@@ -271,6 +271,7 @@ class MainFragment : Fragment() {
     /** Since onDestroy is not a guarenteed call when app destroyed*/
     override fun onPause() {
         super.onPause()
+        playBookForegroundService?.updateCompletedPagePositionToDb()
         if (isServiceBound) {
             activity?.unbindService(playerConnection)
             isServiceBound = false
@@ -314,6 +315,7 @@ class MainFragment : Fragment() {
         selectedTtsLanguage = AppPreferences.getInstance().ttsLanguage
         layoutPersistentBottomSheet.layoutSliderPlayback.apply {
             tvSliderTitle.text = "Page"
+            sliderCustom.min = 1
         }
         layoutPersistentBottomSheet.layoutSliderSpeed.apply {
             tvSliderTitle.text = "Speed"
@@ -771,6 +773,7 @@ class MainFragment : Fragment() {
             tvValue.text = "${sliderCustom.progress}/${playBookForegroundService?.getCurrentPlayingBook()?.pageCount}"
             sliderCustom.min = 1
             sliderCustom.max = playBookForegroundService?.getCurrentPlayingBook()?.pageCount ?: 0
+            sliderCustom.progress = playBookForegroundService?.getCurrentPagePosition() ?: 1
         }
         val bookCover = File(
             /* parent = */ context.getBookCoversFileDir(),
@@ -816,6 +819,9 @@ class MainFragment : Fragment() {
     @SuppressLint("NotifyDataSetChanged")
     private fun observeForData() {
         (activity as? MainActivity)?.collectLatestLifecycleFlow(flow = bookViewModel.getAllBookItemsFlow()) { booksList: List<Book?> ->
+            if (this.booksList.isNotEmpty() && this.booksList == booksList) {
+                return@collectLatestLifecycleFlow
+            }
 //            pdfList.add(it.absolutePath)
 //          requireActivity().openFile(it)
             this.booksList = booksList
