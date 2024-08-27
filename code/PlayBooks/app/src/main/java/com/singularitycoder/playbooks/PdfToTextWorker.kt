@@ -89,15 +89,6 @@ class PdfToTextWorker(val context: Context, workerParams: WorkerParameters) : Co
 
     private fun File.toBook(): Book? {
         if (this.exists().not()) return null
-//        val size = if (this.isDirectory) {
-//            "${getFilesListFrom(this).size} items"
-//        } else {
-//            if (this.extension.isBlank()) {
-//                this.getAppropriateSize()
-//            } else {
-//                "${this.extension.toUpCase()}  •  ${this.getAppropriateSize()}"
-//            }
-//        }
 
         return Book(
             id = this.getBookId(),

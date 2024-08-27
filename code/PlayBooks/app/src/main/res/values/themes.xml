@@ -1,7 +1,8 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Base.Theme.PlayBooks" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Base.Theme.PlayBooks" parent="Theme.Material3.Light.NoActionBar">
         <item name="android:navigationBarColor">@color/white</item>
+        <item name="android:forceDarkAllowed">false</item>
 <!--        <item name="android:statusBarColor">@color/purple_700</item>-->
 <!--        <item name="android:windowLightStatusBar">true</item>-->
     </style>

@@ -1,9 +1,9 @@
 TODO FEATURES:--------------------------------------------------
 
 page slider not correct
-store current read page positions in db
-Show instructions on how to convert ebook formats to pdf online
+store current read page position in db
 Skip book option in loader to skip books that take too long to convert
+Get service data through viewmodels
 
 https://developer.android.com/training/data-storage/shared/media
 

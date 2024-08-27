@@ -3,6 +3,7 @@ package com.singularitycoder.playbooks.helpers
 import com.singularitycoder.playbooks.BuildConfig
 import com.singularitycoder.playbooks.MainFragment
 import com.singularitycoder.playbooks.R
+import java.util.Locale
 
 const val FILE_PROVIDER = "${BuildConfig.APPLICATION_ID}.fileprovider"
 
@@ -100,3 +101,46 @@ enum class MimeType(val value: String) {
     ANY(value = "*/*"),
     FONT(value = "application/x-font-ttf")
 }
+
+val ebookReaderFormats = listOf(
+    "pdf",
+    "epub",
+    "epub3",
+    "mobi",
+    "djvu",
+    "fb2",
+    "txt",
+    "rtf",
+    "azw",
+    "azw3",
+    "html",
+    "cbz",
+    "cbr",
+    "doc",
+    "docx",
+    "opds"
+)
+
+val TTS_LANGUAGE_LIST = listOf(
+    Locale.CANADA,
+    Locale.CANADA_FRENCH,
+    Locale.CHINA,
+//    Locale.CHINESE,
+//    Locale.ENGLISH,
+    Locale.FRANCE,
+//    Locale.FRENCH,
+//    Locale.GERMAN,
+    Locale.GERMANY,
+//    Locale.ITALIAN,
+    Locale.ITALY,
+    Locale.JAPAN,
+//    Locale.JAPANESE,
+    Locale.KOREA,
+//    Locale.KOREAN,
+//    Locale.PRC,
+//    Locale.SIMPLIFIED_CHINESE,
+    Locale.TAIWAN,
+//    Locale.TRADITIONAL_CHINESE,
+    Locale.UK,
+    Locale.US
+).sortedBy { it.displayName }

@@ -9,6 +9,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.ServiceConnection
+import android.content.pm.ActivityInfo
+import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Build
@@ -80,11 +82,13 @@ import com.singularitycoder.playbooks.helpers.setNavigationBarColor
 import com.singularitycoder.playbooks.helpers.shouldShowRationaleFor
 import com.singularitycoder.playbooks.helpers.showAlertDialog
 import com.singularitycoder.playbooks.helpers.showAppSettings
+import com.singularitycoder.playbooks.helpers.showPopupMenu
 import com.singularitycoder.playbooks.helpers.showPopupMenuWithIcons
 import com.singularitycoder.playbooks.helpers.showSingleSelectionPopupMenu
 import com.singularitycoder.playbooks.helpers.showSnackBar
 import com.singularitycoder.playbooks.helpers.showToast
 import com.singularitycoder.playbooks.helpers.showTtsSettings
+import com.singularitycoder.playbooks.helpers.showWebPage
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -109,6 +113,8 @@ class MainFragment : Fragment() {
             }
         }
     }
+
+    protected var previousConfig: Configuration? = null
 
     private var topicParam: String? = null
 
@@ -273,8 +279,27 @@ class MainFragment : Fragment() {
         LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(messageReceiver)
     }
 
+    // https://stackoverflow.com/questions/59694023/listening-on-dark-theme-in-notification-area-toggle-and-be-notified-of-a-chang
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+
+        fun isOnDarkMode(configuration: Configuration): Boolean {
+            return (configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+        }
+
+        fun isNightConfigChanged(newConfig: Configuration): Boolean {
+            return (newConfig.diff(previousConfig) and ActivityInfo.CONFIG_UI_MODE) != 0 && isOnDarkMode(newConfig) != isOnDarkMode(previousConfig!!)
+        }
+
+        if (isNightConfigChanged(newConfig)) {
+            playBookForegroundService?.doOnConfigChange()
+        }
+    }
+
     private fun FragmentMainBinding.setupUI() {
+        previousConfig = Configuration(resources.configuration)
         bottomSheetBehavior = BottomSheetBehavior.from(binding.layoutPersistentBottomSheet.root)
+        bottomSheetBehavior.isGestureInsetBottomIgnored = true // Only after setting this peekHeight will work
 //        bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
         requireActivity().setNavigationBarColor(R.color.white)
         rvBooks.apply {
@@ -331,6 +356,8 @@ class MainFragment : Fragment() {
         ivHeaderMore.onSafeClick { view: Pair<View?, Boolean> ->
             val optionsList = listOf(
                 Pair("Refresh", R.drawable.round_refresh_24),
+                Pair("Download E-Books", R.drawable.outline_file_download_24),
+                Pair("Convert to PDF", R.drawable.outline_picture_as_pdf_24),
                 Pair("Delete all books", R.drawable.outline_delete_24)
             )
             requireContext().showPopupMenuWithIcons(
@@ -345,6 +372,40 @@ class MainFragment : Fragment() {
                     }
 
                     optionsList[1].first -> {
+                        context?.showWebPage(url = "https://www.google.com/search?q=download+free+ebooks")
+                    }
+
+                    optionsList[2].first -> {
+                        val menuList = listOf(
+                            "epub to pdf",
+                            "txt to pdf",
+                            "djvu to pdf",
+                            "word to pdf",
+                            "rich text to pdf",
+                            "kindle (azw) to pdf"
+                        )
+                        val urlList = listOf(
+                            "https://www.google.com/search?q=convert+epub+to+pdf+online",
+                            "https://www.google.com/search?q=convert+txt+to+pdf+online",
+                            "https://www.google.com/search?q=convert+djvu+to+pdf+online",
+                            "https://www.google.com/search?q=convert+word+to+pdf+online",
+                            "https://www.google.com/search?q=convert+rich+text+to+pdf+online",
+                            "https://www.google.com/search?q=convert+kindle+to+pdf+online"
+                        )
+                        context?.showPopupMenu(
+                            view = view.first,
+                            title = "to PDF Converters",
+                            menuList = menuList
+                        ) { menuPosition: Int ->
+                            urlList.forEachIndexed { index, s ->
+                                if (index == menuPosition) {
+                                    context?.showWebPage(url = urlList[menuPosition])
+                                }
+                            }
+                        }
+                    }
+
+                    optionsList[3].first -> {
                         requireContext().showAlertDialog(
                             title = "Delete all books",
                             message = "Don't worry. The files on your device won't be deleted.",

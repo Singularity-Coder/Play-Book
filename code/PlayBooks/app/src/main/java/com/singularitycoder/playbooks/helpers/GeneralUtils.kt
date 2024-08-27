@@ -6,6 +6,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Point
@@ -25,6 +26,7 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.core.text.HtmlCompat
@@ -326,4 +328,14 @@ fun Context.sendCustomBroadcast(
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
     } catch (_: Exception) {
     }
+}
+
+fun Context.showWebPage(url: String) {
+    CustomTabsIntent.Builder().build().launchUrl(this, Uri.parse(url))
+}
+
+// https://medium.com/@saishaddai/how-to-know-when-youre-using-dark-mode-programmatically-9be83fded4b0
+fun Context.isDarkModeOn(): Boolean {
+    val currentNightMode = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+    return currentNightMode == Configuration.UI_MODE_NIGHT_YES
 }

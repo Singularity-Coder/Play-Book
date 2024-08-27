@@ -24,6 +24,7 @@ import com.singularitycoder.playbooks.helpers.IntentExtraValue
 import com.singularitycoder.playbooks.helpers.IntentKey
 import com.singularitycoder.playbooks.helpers.NotificationAction
 import com.singularitycoder.playbooks.helpers.NotificationsHelper
+import com.singularitycoder.playbooks.helpers.TTS_LANGUAGE_LIST
 import com.singularitycoder.playbooks.helpers.TtsTag
 import com.singularitycoder.playbooks.helpers.db.PlayBookDatabase
 import com.singularitycoder.playbooks.helpers.getBookCoversFileDir
@@ -152,6 +153,7 @@ class PlayBookForegroundService : Service() {
         print("Text-To-Speech engine is ready.")
 
         availableLanguages.add(Locale.getDefault())
+        availableLanguages.addAll(TTS_LANGUAGE_LIST)
         tts?.availableLanguages?.forEach { locale: Locale ->
             if (tts?.isLanguageAvailable(locale) == TextToSpeech.LANG_AVAILABLE) {
                 availableLanguages.add(locale)
@@ -351,6 +353,14 @@ class PlayBookForegroundService : Service() {
                 endIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodPosition + 1) ?: 0
             )
             updatePlayerPlayingState()
+        }
+    }
+
+    fun doOnConfigChange() {
+        if (tts?.isSpeaking == true) {
+            updatePlayerPlayingState()
+        } else {
+            updatePlayerPausedState()
         }
     }
 

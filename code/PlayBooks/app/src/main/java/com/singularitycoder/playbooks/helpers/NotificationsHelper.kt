@@ -108,9 +108,17 @@ internal object NotificationsHelper {
         title: String?,
         image: Bitmap?
     ): Notification {
+        notificationLayoutBig?.setTextColor(
+            R.id.tv_notification_track_title,
+            if (context.isDarkModeOn()) context.color(R.color.white) else context.color(R.color.title_color)
+        )
         notificationLayoutBig?.setTextViewText(R.id.tv_notification_track_title, title ?: ":)")
         notificationLayoutBig?.setImageViewResource(R.id.iv_play_pause, playPauseResId)
 
+        notificationLayoutSmall?.setTextColor(
+            R.id.tv_notification_track_title,
+            if (context.isDarkModeOn()) context.color(R.color.white) else context.color(R.color.title_color)
+        )
         notificationLayoutSmall?.setImageViewBitmap(R.id.iv_image, image)
         notificationLayoutSmall?.setTextViewText(R.id.tv_notification_track_title, title ?: ":)")
         notificationLayoutSmall?.setImageViewResource(R.id.iv_play_pause_small, playPauseResId)
