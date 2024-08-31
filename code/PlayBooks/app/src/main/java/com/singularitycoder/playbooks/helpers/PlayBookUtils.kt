@@ -6,8 +6,6 @@ import java.io.File
 
 object PlayBookUtils {
     val gson: Gson = GsonBuilder().setLenient().create()
-//    val typedValue = TypedValue()
-//    val webpageFragmentIdList = mutableListOf<String?>()
 }
 
 fun File.getBookId(): String = (this.nameWithoutExtension + "_" + this.extension).sanitize()

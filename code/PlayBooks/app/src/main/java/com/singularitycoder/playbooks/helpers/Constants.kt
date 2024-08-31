@@ -56,10 +56,7 @@ object IntentExtraValue {
     const val TTS_PAUSED = "TTS_PAUSED"
     const val TTS_PLAYING = "TTS_PLAYING"
     const val TTS_WORD_HIGHLIGHT = "TTS_WORD_HIGHLIGHT"
-//    const val NEXT_SENTENCE = "NEXT_SENTENCE"
-//    const val PREVIOUS_SENTENCE = "PREVIOUS_SENTENCE"
-//    const val NEXT_PAGE = "NEXT_PAGE"
-//    const val PREVIOUS_PAGE = "PREVIOUS_PAGE"
+    const val SET_PAGE_PROGRESS = "SET_PAGE_PROGRESS"
 }
 
 object Db {
@@ -86,20 +83,11 @@ object BottomSheetTag {
 }
 
 object WorkerData {
-    const val PDF_PATH = "WORKER_DATA_RSS_URL"
     const val KEY_PROGRESS = "KEY_PROGRESS"
 }
 
 object WorkerTag {
     const val PDF_TO_TEXT_CONVERTER = "PDF_TO_TEXT_CONVERTER"
-}
-
-enum class MimeType(val value: String) {
-    EPUB(value = "application/epub+zip"),
-    PDF(value = "application/pdf"),
-    TEXT(value = "text/plain"),
-    ANY(value = "*/*"),
-    FONT(value = "application/x-font-ttf")
 }
 
 val ebookReaderFormats = listOf(

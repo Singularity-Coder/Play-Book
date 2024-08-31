@@ -11,12 +11,13 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.singularitycoder.playbooks.databinding.ActivityMainBinding
-import com.singularitycoder.playbooks.helpers.AppPreferences
 import com.singularitycoder.playbooks.helpers.FragmentsTag
 import com.singularitycoder.playbooks.helpers.IntentExtraKey
 import com.singularitycoder.playbooks.helpers.NotificationAction
+import com.singularitycoder.playbooks.helpers.db.PlayBooksDatabase
 import com.singularitycoder.playbooks.helpers.showScreen
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -25,8 +26,8 @@ class MainActivity : AppCompatActivity() {
         private val TAG = this::class.java.simpleName
     }
 
-//    @Inject
-//    lateinit var connectMeDatabase: ConnectMeDatabase
+    @Inject
+    lateinit var playBooksDatabase: PlayBooksDatabase
 
     private lateinit var binding: ActivityMainBinding
 
@@ -45,7 +46,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         showScreen(
-            fragment = MainFragment.newInstance(""),
+            fragment = MainFragment.newInstance(),
             tag = FragmentsTag.MAIN,
             isAdd = true,
             isAddToBackStack = false
@@ -80,7 +81,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        // https://stackoverflow.com/questions/50372487/android-room-database-file-is-empty-db-db-shm-db-wal
-//        connectMeDatabase.close() // close the primary database to ensure all the transactions are merged
+        /** Close the primary database to ensure all the transactions are merged.
+         * This will mess up ur foreground service if u r using db in it
+         * https://stackoverflow.com/questions/50372487/android-room-database-file-is-empty-db-db-shm-db-wal */
+//        playBooksDatabase.close()
     }
 }

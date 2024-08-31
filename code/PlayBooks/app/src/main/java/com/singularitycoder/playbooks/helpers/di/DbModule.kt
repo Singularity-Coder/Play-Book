@@ -5,7 +5,7 @@ import androidx.room.Room
 import com.singularitycoder.playbooks.BookDao
 import com.singularitycoder.playbooks.BookDataDao
 import com.singularitycoder.playbooks.helpers.Db
-import com.singularitycoder.playbooks.helpers.db.PlayBookDatabase
+import com.singularitycoder.playbooks.helpers.db.PlayBooksDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,15 +19,15 @@ object DbModule {
 
     @Singleton
     @Provides
-    fun injectConnectMeDatabase(@ApplicationContext context: Context): PlayBookDatabase {
-        return Room.databaseBuilder(context, PlayBookDatabase::class.java, Db.PLAY_BOOKS).build()
+    fun injectConnectMeDatabase(@ApplicationContext context: Context): PlayBooksDatabase {
+        return Room.databaseBuilder(context, PlayBooksDatabase::class.java, Db.PLAY_BOOKS).build()
     }
 
     @Singleton
     @Provides
-    fun injectBookDao(db: PlayBookDatabase): BookDao = db.bookDao()
+    fun injectBookDao(db: PlayBooksDatabase): BookDao = db.bookDao()
 
     @Singleton
     @Provides
-    fun injectBookDataDao(db: PlayBookDatabase): BookDataDao = db.bookDataDao()
+    fun injectBookDataDao(db: PlayBooksDatabase): BookDataDao = db.bookDataDao()
 }

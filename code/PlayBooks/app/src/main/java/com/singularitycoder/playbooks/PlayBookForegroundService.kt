@@ -1,6 +1,5 @@
 package com.singularitycoder.playbooks
 
-import android.annotation.SuppressLint
 import android.app.ForegroundServiceStartNotAllowedException
 import android.app.Service
 import android.content.BroadcastReceiver
@@ -26,7 +25,7 @@ import com.singularitycoder.playbooks.helpers.NotificationAction
 import com.singularitycoder.playbooks.helpers.NotificationsHelper
 import com.singularitycoder.playbooks.helpers.TTS_LANGUAGE_LIST
 import com.singularitycoder.playbooks.helpers.TtsTag
-import com.singularitycoder.playbooks.helpers.db.PlayBookDatabase
+import com.singularitycoder.playbooks.helpers.db.PlayBooksDatabase
 import com.singularitycoder.playbooks.helpers.getBookCoversFileDir
 import com.singularitycoder.playbooks.helpers.toBitmap
 import dagger.hilt.EntryPoint
@@ -35,22 +34,26 @@ import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.Locale
 
 class PlayBookForegroundService : Service() {
+
     companion object {
         private val TAG = this::class.java.simpleName
+
+        /** We need this static var to check when app is restarted, which book
+         * is playing and load the correct book data into the player view */
         var playBookForegroundService: PlayBookForegroundService? = null
     }
 
     @EntryPoint
     @InstallIn(SingletonComponent::class)
     interface ThisEntryPoint {
-        fun db(): PlayBookDatabase
-//        fun networkStatus(): NetworkStatus
+        fun db(): PlayBooksDatabase
     }
 
     private var tts: TextToSpeech? = null
@@ -70,16 +73,16 @@ class PlayBookForegroundService : Service() {
     private var currentPlayingBook: Book? = null
     private var currentPlayingBookData: BookData? = null
 
-    private var currentPeriodPosition: Int = -1
+    /** [currentPeriodLength] basically acts as index for [currentPlayingBookData.periodPositionsList] */
+    private var currentPeriodLength: Int = -1
     private var currentPagePosition: Int = 0
 
     private var currentlyPlayingText: CharSequence? = null
 
     private var bookCoverBitmap: Bitmap? = null
 
-    private var pagePosition = 0
-
-    /** This receiver should be here as when app is killed this service must be self sufficient and cannot depend on killed app resources */
+    /** This will handle notification button clicks. This receiver should be here as when app
+     * is killed this service must be self sufficient and cannot depend on killed app resources */
     private val notificationButtonClickReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             if (intent.action != IntentKey.NOTIF_BTN_CLICK_BROADCAST_2) return
@@ -118,7 +121,6 @@ class PlayBookForegroundService : Service() {
     }
 
     /** Foreground Service created */
-    @SuppressLint("UnspecifiedRegisterReceiverFlag")
     override fun onCreate() {
         super.onCreate()
         Log.d(TAG, "onCreate - First")
@@ -133,7 +135,6 @@ class PlayBookForegroundService : Service() {
         val dbEntryPoint = EntryPointAccessors.fromApplication(appContext, com.singularitycoder.playbooks.PdfToTextWorker.ThisEntryPoint::class.java)
         bookDao = dbEntryPoint.db().bookDao()
         bookDataDao = dbEntryPoint.db().bookDataDao()
-        // play book
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -152,7 +153,7 @@ class PlayBookForegroundService : Service() {
     }
 
     private fun doWhenTtsIsReady() {
-        print("Text-To-Speech engine is ready.")
+        Log.d(TAG, "Text-To-Speech engine is ready.")
 
         availableLanguages.add(Locale.getDefault())
         availableLanguages.addAll(TTS_LANGUAGE_LIST)
@@ -165,8 +166,8 @@ class PlayBookForegroundService : Service() {
         setTtsPitch(AppPreferences.getInstance().ttsPitch.toFloat())
         setTtsSpeechRate(AppPreferences.getInstance().ttsSpeechRate.toFloat())
 
-        // setOnUtteranceProgressListener must be set after tts is init
-        // https://stackoverflow.com/questions/52233235/setonutteranceprogresslistener-not-at-all-working-for-text-to-speech-for-api-2
+        /** setOnUtteranceProgressListener must be set after tts is init
+         * https://stackoverflow.com/questions/52233235/setonutteranceprogresslistener-not-at-all-working-for-text-to-speech-for-api-2 */
         tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
             override fun onStart(uttId: String?) = Unit
 
@@ -219,23 +220,15 @@ class PlayBookForegroundService : Service() {
     /**
      * Promotes the service to a foreground service, showing a notification to the user.
      * This needs to be called within 10 seconds of starting the service or the system will throw an exception.
+     * Before starting the service as foreground check that the app has the appropriate runtime permissions.
+     * if (permissionNotGranted) {
+     *    stopSelf()
+     *    return
+     * }
      */
     private fun startAsForegroundService() {
-        // Before starting the service as foreground check that the app has the
-        // appropriate runtime permissions. In this case, verify that the user has
-        // granted the CAMERA permission.
-//        val cameraPermission =
-//            PermissionChecker.checkSelfPermission(this, Manifest.permission.CAMERA)
-//        if (cameraPermission != PermissionChecker.PERMISSION_GRANTED) {
-//            // Without camera permissions the service cannot run in the foreground
-//            // Consider informing user or updating your app UI if visible.
-//            stopSelf()
-//            return
-//        }
-
+        /** Create the notification to display while the service is running */
         try {
-            // Create the notification to display while the service is running
-//            val notification = NotificationCompat.Builder(this, "CHANNEL_ID").build()
             NotificationsHelper.createNotificationChannel(this@PlayBookForegroundService)
             NotificationsHelper.createNotificationLayout(this@PlayBookForegroundService)
             val notification = NotificationsHelper.createNotification(
@@ -250,34 +243,36 @@ class PlayBookForegroundService : Service() {
                 /* notification = */ notification,
                 /* foregroundServiceType = */ ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK,
             )
-//            NotificationsHelper.updateNotification(context = this, playPauseResId = R.drawable.round_play_arrow_24)
         } catch (e: Exception) {
+            /** App not in a valid state to start foreground service (e.g. started from bg) */
             if (e is ForegroundServiceStartNotAllowedException) {
-                // App not in a valid state to start foreground service
-                // (e.g. started from bg)
             }
         }
     }
 
+    /** This is called when we click on a book. This is where we fetch book data. */
     fun loadData(bookId: String?) {
         this.bookId = bookId
         CoroutineScope(Dispatchers.IO).launch {
+            /** Before starting a new book update the page completion of the current book */
+            updateCompletedPagePositionToDb().join()
+
             currentPlayingBook = bookDao?.getItemById(bookId ?: "")
             currentPlayingBookData = bookDataDao?.getItemById(bookId ?: "")
             bookCoverBitmap = File(
                 /* parent = */ this@PlayBookForegroundService.getBookCoversFileDir(),
                 /* child = */ "${currentPlayingBook?.id}.jpg"
             ).toBitmap()
-            currentPeriodPosition = currentPlayingBook?.completedPagePosition ?: -1
-            pagePosition = currentPlayingBookData?.periodToPageMap?.get(currentPeriodPosition) ?: 0
+            currentPeriodLength = currentPlayingBook?.completedPageNum ?: -1
 
             withContext(Dispatchers.Main) {
                 sendBroadcastToMain(IntentExtraValue.FOREGROUND_SERVICE_READY)
                 speak(
-                    startIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPlayingBook?.completedPagePosition ?: 0) ?: 0,
-                    endIndex = currentPlayingBookData?.periodPositionsList?.getOrNull((currentPlayingBook?.completedPagePosition ?: 0) + 1) ?: 0
+                    startIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPlayingBook?.completedPageNum ?: 0) ?: 0,
+                    endIndex = currentPlayingBookData?.periodPositionsList?.getOrNull((currentPlayingBook?.completedPageNum ?: 0) + 1) ?: 0
                 )
                 updatePlayerPlayingState()
+                setPageProgress()
             }
         }
     }
@@ -353,8 +348,8 @@ class PlayBookForegroundService : Service() {
             updatePlayerPausedState()
         } else {
             speak(
-                startIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodPosition) ?: 0,
-                endIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodPosition + 1) ?: 0
+                startIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodLength) ?: 0,
+                endIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodLength + 1) ?: 0
             )
             updatePlayerPlayingState()
         }
@@ -389,10 +384,10 @@ class PlayBookForegroundService : Service() {
         updateCompletedPagePositionToDb()
     }
 
-    fun updateCompletedPagePositionToDb() {
-        CoroutineScope(Dispatchers.IO).launch {
+    fun updateCompletedPagePositionToDb(): Job {
+        return CoroutineScope(Dispatchers.IO).launch {
             bookDao?.updateCompletedPageWithId(
-                completedPage = currentPeriodPosition,
+                completedPageNum = currentPeriodLength,
                 id = currentPlayingBook?.id ?: ""
             )
         }
@@ -408,64 +403,72 @@ class PlayBookForegroundService : Service() {
     fun stopAndPlayTts() {
         stopTts()
         speak(
-            startIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodPosition) ?: 0,
-            endIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodPosition + 1) ?: 0
+            startIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodLength) ?: 0,
+            endIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodLength + 1) ?: 0
         )
         updatePlayerPlayingState()
     }
 
     fun nextSentence() {
-        currentPeriodPosition += 1
+        currentPeriodLength += 1
         speak(
-            startIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodPosition) ?: 0,
-            endIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodPosition + 1) ?: 0
+            startIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodLength) ?: 0,
+            endIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodLength + 1) ?: 0
         )
         updatePlayerPlayingState()
+        setPageProgress()
     }
 
     fun previousSentence() {
-        currentPeriodPosition -= 1
+        currentPeriodLength -= 1
         speak(
-            startIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodPosition - 1) ?: 0,
-            endIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodPosition) ?: 0
+            startIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodLength - 1) ?: 0,
+            endIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodLength) ?: 0
         )
         updatePlayerPlayingState()
+        setPageProgress()
     }
 
     fun nextPage(pagePosition: Int? = null) {
         if (pagePosition != null) {
-            currentPeriodPosition += pagePosition
+            currentPeriodLength = currentPlayingBookData?.pageNumToPeriodLengthMap?.getOrDefault("$pagePosition", 1) ?: 1
         } else {
-            currentPeriodPosition += 3
+            /** Determine current page from period length and +1 that page and set the new period length.
+             * This is necessary because u dont know what page it is just by period length */
+            val newPagePosition = currentPlayingBookData?.periodLengthToPageNumMap?.getOrDefault("$currentPeriodLength", 1) ?: 1
+            currentPeriodLength = currentPlayingBookData?.pageNumToPeriodLengthMap?.getOrDefault("${newPagePosition + 1}", 1) ?: 1
         }
         speak(
-            startIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodPosition) ?: 0,
-            endIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodPosition + 1) ?: 0
+            startIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodLength) ?: 0,
+            endIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodLength + 1) ?: 0
         )
-//        currentPeriodPosition += currentPlayingBookData?.periodCountPerPageList?.find { it >= currentPeriodPosition } ?: 0
-//        speak(
-//            startIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodPosition) ?: 0,
-//            endIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodPosition + 1) ?: 0
-//        )
         updatePlayerPlayingState()
+        setPageProgress()
     }
 
     fun previousPage(pagePosition: Int? = null) {
         if (pagePosition != null) {
-            currentPeriodPosition -= pagePosition
+            currentPeriodLength = currentPlayingBookData?.pageNumToPeriodLengthMap?.getOrDefault("$pagePosition", 1) ?: 1
         } else {
-            currentPeriodPosition -= 3
+            /** Determine current page from period length and +1 that page and set the new period length.
+             * This is necessary because u dont know what page it is just by period length */
+            val newPagePosition = currentPlayingBookData?.periodLengthToPageNumMap?.getOrDefault("$currentPeriodLength", 1) ?: 1
+            currentPeriodLength = currentPlayingBookData?.pageNumToPeriodLengthMap?.getOrDefault("${newPagePosition - 1}", 1) ?: 1
         }
         speak(
-            startIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodPosition - 1) ?: 0,
-            endIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodPosition) ?: 0
+            startIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodLength - 1) ?: 0,
+            endIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodLength) ?: 0
         )
-//        currentPeriodPosition -= currentPlayingBookData?.periodCountPerPageList?.find { it <= currentPeriodPosition } ?: 0
-//        speak(
-//            startIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodPosition) ?: 0,
-//            endIndex = currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodPosition + 1) ?: 0
-//        )
         updatePlayerPlayingState()
+        setPageProgress()
+    }
+
+    private fun setPageProgress() {
+//        pagePosition = currentPlayingBookData?.periodPosToPageNumMap?.get(
+//            currentPlayingBookData?.periodPositionsList?.getOrNull(currentPeriodLength).toString()
+//        ) ?: 1
+        currentPagePosition = currentPlayingBookData?.periodLengthToPageNumMap?.getOrDefault("$currentPeriodLength", 1) ?: 1
+        sendBroadcastToMain(IntentExtraValue.SET_PAGE_PROGRESS)
     }
 
     /** Any call to speak() for the same string content as wakeUpText will result in the playback of destFileName.
@@ -493,11 +496,7 @@ class PlayBookForegroundService : Service() {
 
     fun getCurrentPlayingBook(): Book? = currentPlayingBook
 
-    fun getCurrentPlayingBookData(): BookData? = currentPlayingBookData
-
-    fun getCurrentPeriodPosition(): Int = currentPeriodPosition
-
-    fun getCurrentPagePosition(): Int = pagePosition
+    fun getCurrentPagePosition(): Int = currentPagePosition
 
     fun getCurrentlyPlayingText(): CharSequence? = currentlyPlayingText
 

@@ -9,7 +9,7 @@ import com.singularitycoder.playbooks.helpers.IntentKey
 
 class ThisBroadcastReceiver : BroadcastReceiver() {
 
-    /** Data sent to [MainFragment] */
+    /** Data sent to [PlayBookForegroundService] */
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
             IntentKey.NOTIF_BTN_CLICK_BROADCAST -> {

@@ -18,5 +18,5 @@ data class Book(
     var extension: String? = "",
     var isDirectory: Boolean = false,
     var pageCount: Int = 0,
-    var completedPagePosition: Int = 0
+    var completedPageNum: Int = 0
 ) : Parcelable

@@ -9,6 +9,9 @@
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+
+    <!--In Android, after about two minutes of inactivity from the user anything non-essential which is without a wakelock will be suspended-->
+    <!--https://developer.android.com/develop/background-work/background-tasks/scheduling/wakelock-->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application

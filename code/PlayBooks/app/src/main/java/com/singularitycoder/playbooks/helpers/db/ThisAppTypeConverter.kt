@@ -36,9 +36,9 @@ class IntListConverter {
 
 class IntHashMapConverter {
     @TypeConverter
-    fun fromHashMap(value: HashMap<Int, Int>): String = PlayBookUtils.gson.toJson(value)
+    fun fromHashMap(value: HashMap<String, Int>): String = PlayBookUtils.gson.toJson(value)
 
     @TypeConverter
-    fun toHashMap(value: String): HashMap<Int, Int> =
-        PlayBookUtils.gson.fromJson(value, object : TypeToken<Map<Int, Int>>() {}.type)
+    fun toHashMap(value: String): HashMap<String, Int> =
+        PlayBookUtils.gson.fromJson(value, object : TypeToken<HashMap<String, Int>>() {}.type)
 }

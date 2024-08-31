@@ -21,7 +21,7 @@ import com.singularitycoder.playbooks.BookDataDao
     IntListConverter::class,
     IntHashMapConverter::class
 )
-abstract class PlayBookDatabase : RoomDatabase() {
+abstract class PlayBooksDatabase : RoomDatabase() {
     abstract fun bookDao(): BookDao
     abstract fun bookDataDao(): BookDataDao
 }

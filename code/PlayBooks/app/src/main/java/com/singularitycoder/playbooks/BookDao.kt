@@ -32,8 +32,8 @@ interface BookDao {
     @Update(onConflict = OnConflictStrategy.REPLACE)
     suspend fun update(book: Book)
 
-    @Query("UPDATE ${DbTable.BOOK} SET completedPagePosition = :completedPage WHERE id LIKE :id")
-    suspend fun updateCompletedPageWithId(completedPage: Int, id: String)
+    @Query("UPDATE ${DbTable.BOOK} SET completedPageNum = :completedPageNum WHERE id LIKE :id")
+    suspend fun updateCompletedPageWithId(completedPageNum: Int, id: String)
 
     @Query("SELECT * FROM ${DbTable.BOOK} WHERE id LIKE :id LIMIT 1")
     suspend fun getItemById(id: String): Book

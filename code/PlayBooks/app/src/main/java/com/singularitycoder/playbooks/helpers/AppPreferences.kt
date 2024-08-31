@@ -9,16 +9,15 @@ import java.util.Locale
 class AppPreferences(context: Context) {
 
     companion object {
-        // Singleton prevents multiple instances of AppPreferences opening at the same time.
+        /** Singleton prevents multiple instances of AppPreferences opening at the same time. */
         @Volatile
         private var INSTANCE: AppPreferences? = null
 
         fun init(context: Context): AppPreferences {
-            // if the INSTANCE is not null, then return it, if it is, then create the preferences
+            /** if the INSTANCE is not null, then return it, if it is, then create the preferences */
             return INSTANCE ?: synchronized(this) {
                 val instance = AppPreferences(context)
                 INSTANCE = instance
-                // return instance
                 instance
             }
         }

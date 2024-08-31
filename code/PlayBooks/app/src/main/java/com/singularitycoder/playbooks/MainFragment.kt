@@ -40,7 +40,6 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.OutOfQuotaPolicy
@@ -51,6 +50,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetBehavior.BottomSheetCallback
 import com.google.android.material.card.MaterialCardView
 import com.singularitycoder.playbooks.databinding.FragmentMainBinding
+import com.singularitycoder.playbooks.helpers.AndroidVersions
 import com.singularitycoder.playbooks.helpers.AppPreferences
 import com.singularitycoder.playbooks.helpers.FILE_PROVIDER
 import com.singularitycoder.playbooks.helpers.IntentExtraKey
@@ -71,12 +71,12 @@ import com.singularitycoder.playbooks.helpers.getDownloadDirectory
 import com.singularitycoder.playbooks.helpers.globalLayoutAnimation
 import com.singularitycoder.playbooks.helpers.hasNotificationsPermission
 import com.singularitycoder.playbooks.helpers.hasPdfs
-import com.singularitycoder.playbooks.helpers.hasStoragePermission
+import com.singularitycoder.playbooks.helpers.hasStoragePermissionApi30
 import com.singularitycoder.playbooks.helpers.hideKeyboard
 import com.singularitycoder.playbooks.helpers.layoutAnimationController
 import com.singularitycoder.playbooks.helpers.onImeClick
 import com.singularitycoder.playbooks.helpers.onSafeClick
-import com.singularitycoder.playbooks.helpers.requestStoragePermission
+import com.singularitycoder.playbooks.helpers.requestStoragePermissionApi30
 import com.singularitycoder.playbooks.helpers.setMargins
 import com.singularitycoder.playbooks.helpers.setNavigationBarColor
 import com.singularitycoder.playbooks.helpers.shouldShowRationaleFor
@@ -97,9 +97,6 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.Locale
 
-
-const val ARG_PARAM_SCREEN_TYPE = "ARG_PARAM_SCREEN_TYPE"
-
 @AndroidEntryPoint
 class MainFragment : Fragment() {
 
@@ -107,16 +104,10 @@ class MainFragment : Fragment() {
         private val TAG = this::class.java.simpleName
 
         @JvmStatic
-        fun newInstance(screenType: String) = MainFragment().apply {
-            arguments = Bundle().apply {
-                putString(ARG_PARAM_SCREEN_TYPE, screenType)
-            }
-        }
+        fun newInstance() = MainFragment()
     }
 
     private var previousConfig: Configuration? = null
-
-    private var topicParam: String? = null
 
     private val booksAdapter = DownloadsAdapter()
 
@@ -153,6 +144,10 @@ class MainFragment : Fragment() {
                     doWhenTtsIsPlaying(context)
                 }
 
+                IntentExtraValue.SET_PAGE_PROGRESS -> {
+                    binding.layoutPersistentBottomSheet.layoutSliderPlayback.sliderCustom.progress = playBookForegroundService?.getCurrentPagePosition() ?: 1
+                }
+
                 IntentExtraValue.TTS_PAUSED -> {
                     binding.layoutPersistentBottomSheet.ivPlay.setImageDrawable(context.drawable(R.drawable.round_play_arrow_24))
                     binding.layoutPersistentBottomSheet.ivHeaderPlay.setImageDrawable(context.drawable(R.drawable.round_play_arrow_24))
@@ -184,26 +179,24 @@ class MainFragment : Fragment() {
         }
     }
 
-    // needed to communicate with the service.
+    /** needed to communicate with the service. */
     private val playerConnection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
-            // we've bound to PlayBookForegroundService, cast the IBinder and get PlayBookForegroundService instance.
+            /** we've bound to PlayBookForegroundService, cast the IBinder and get PlayBookForegroundService instance. */
             Log.d(TAG, "onServiceConnected")
             val binder = service as PlayBookForegroundService.LocalBinder
             playBookForegroundService = binder.getService()
             isServiceBound = true
-//            onServiceConnected()
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
-            // This is called when the connection with the service has been disconnected. Clean up.
+            /** This is called when the connection with the service has been disconnected. Clean up. */
             Log.d(TAG, "onServiceDisconnected")
             isServiceBound = false
             playBookForegroundService = null
         }
     }
 
-    @SuppressLint("InlinedApi")
     private val notificationPermissionResult = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean? ->
         isGranted ?: return@registerForActivityResult
         if (isGranted.not()) {
@@ -226,25 +219,21 @@ class MainFragment : Fragment() {
         if (booksAdapter.bookList.isEmpty()) loadPdfs()
     }
 
+    /** Check if TTS exists */
     private val ttsLauncher = registerForActivityResult<Intent, ActivityResult>(
         ActivityResultContracts.StartActivityForResult()
     ) { result: ActivityResult ->
         if (result.resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
-            // success, create the TTS instance
+            /** success, create the TTS instance */
             isTtsPresent = true
         } else {
             isTtsPresent = false
-            // missing data, install it
+            /** missing data, install it */
             val intent = Intent().apply {
                 action = TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA
             }
             startActivity(intent)
         }
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        topicParam = arguments?.getString(ARG_PARAM_SCREEN_TYPE)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -268,7 +257,7 @@ class MainFragment : Fragment() {
         )
     }
 
-    /** Since onDestroy is not a guarenteed call when app destroyed*/
+    /** Since onDestroy is not a guarenteed call when app destroyed */
     override fun onPause() {
         super.onPause()
         playBookForegroundService?.updateCompletedPagePositionToDb()
@@ -300,15 +289,16 @@ class MainFragment : Fragment() {
     private fun FragmentMainBinding.setupUI() {
         previousConfig = Configuration(resources.configuration)
         bottomSheetBehavior = BottomSheetBehavior.from(binding.layoutPersistentBottomSheet.root)
-        bottomSheetBehavior.isGestureInsetBottomIgnored = true // Only after setting this peekHeight will work
-//        bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+
+        /** Only after setting this peekHeight will work for persistent bottomsheet */
+        bottomSheetBehavior.isGestureInsetBottomIgnored = true
+
         requireActivity().setNavigationBarColor(R.color.white)
         rvBooks.apply {
             layoutAnimation = rvBooks.context.layoutAnimationController(globalLayoutAnimation)
             layoutManager = LinearLayoutManager(context)
             adapter = booksAdapter
         }
-//        ivShield.setMargins(top = (deviceHeight() / 2) - 200.dpToPx().toInt())
         layoutSearch.etSearch.hint = "Search in ${getDownloadDirectory().name}"
         setUpPersistentBottomSheet()
         checkTtsExists()
@@ -331,7 +321,9 @@ class MainFragment : Fragment() {
             sliderCustom.max = TtsConstants.MAX
             sliderCustom.progress = AppPreferences.getInstance().ttsPitch
         }
-        /** This will make sure that when u kill the app & relaunch it u will still see the player view reading the right book */
+
+        /** This will make sure that when u kill the app & relaunch it u will
+         * still see the player view reading the right book */
         if (PlayBookForegroundService.playBookForegroundService != null &&
             PlayBookForegroundService.playBookForegroundService?.isTtsSpeaking() == true
         ) {
@@ -433,7 +425,7 @@ class MainFragment : Fragment() {
                 return@setOnItemClickListener
             }
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (AndroidVersions.isTiramisu()) {
                 if (activity?.hasNotificationsPermission()?.not() == true) {
                     askNotificationPermission()
                     return@setOnItemClickListener
@@ -503,7 +495,7 @@ class MainFragment : Fragment() {
                 }
 
                 getString(R.string.grant_storage_permission) -> {
-                    requireActivity().requestStoragePermission()
+                    requireActivity().requestStoragePermissionApi30()
                 }
 
                 getString(R.string.no_books_found) -> {
@@ -688,7 +680,8 @@ class MainFragment : Fragment() {
             playBookForegroundService?.nextSentence()
         }
 
-        layoutPersistentBottomSheet.ibPreviousSentence.onSafeClick {
+        /** Not using delayed click here as TTS does not switch fast enough to the previous sentence */
+        layoutPersistentBottomSheet.ibPreviousSentence.setOnClickListener {
             playBookForegroundService?.previousSentence()
         }
 
@@ -722,6 +715,7 @@ class MainFragment : Fragment() {
                         context.clipboard()?.text = playBookForegroundService?.getCurrentlyPlayingText()
                     }
 
+                    /** Locale() takes input as short form language codes like en, fr, etc. */
                     optionsList[1].first -> {
                         val ttsLanguages = playBookForegroundService?.getAvailableTtsLanguages()?.toList()
                         val ttsLangMenuList = ttsLanguages?.map {
@@ -769,11 +763,9 @@ class MainFragment : Fragment() {
         binding.layoutPersistentBottomSheet.ivHeaderPlay.setImageDrawable(context.drawable(R.drawable.round_pause_24))
         binding.layoutPersistentBottomSheet.tvHeader.text = playBookForegroundService?.getCurrentPlayingBook()?.title
         binding.layoutPersistentBottomSheet.layoutSliderPlayback.apply {
-            // sliderCustom.progress = playBookForegroundService?.getCurrentPeriodPosition() ?: 0
             tvValue.text = "${sliderCustom.progress}/${playBookForegroundService?.getCurrentPlayingBook()?.pageCount}"
             sliderCustom.min = 1
             sliderCustom.max = playBookForegroundService?.getCurrentPlayingBook()?.pageCount ?: 0
-            sliderCustom.progress = playBookForegroundService?.getCurrentPagePosition() ?: 1
         }
         val bookCover = File(
             /* parent = */ context.getBookCoversFileDir(),
@@ -800,7 +792,7 @@ class MainFragment : Fragment() {
     }
 
     private fun FragmentMainBinding.doWhenForegroundServiceIsReady() {
-        // This must be set after player is ready with book data
+        /** This must be set after player is ready with book data */
         layoutPersistentBottomSheet.layoutSliderPlayback.apply {
             sliderCustom.max = playBookForegroundService?.getCurrentPlayingBook()?.pageCount ?: 0
             tvValue.text = "${sliderCustom.progress}/${playBookForegroundService?.getCurrentPlayingBook()?.pageCount}"
@@ -822,8 +814,6 @@ class MainFragment : Fragment() {
             if (this.booksList.isNotEmpty() && this.booksList == booksList) {
                 return@collectLatestLifecycleFlow
             }
-//            pdfList.add(it.absolutePath)
-//          requireActivity().openFile(it)
             this.booksList = booksList
             booksAdapter.bookList = booksList
             booksAdapter.notifyDataSetChanged()
@@ -844,7 +834,7 @@ class MainFragment : Fragment() {
             putExtra(IntentExtraKey.BOOK_ID, book?.id ?: "")
         }
         activity?.application?.startForegroundService(intent)
-        // bind to the service to update UI
+        /** bind to the service to update UI */
         activity?.bindService(intent, playerConnection, Context.BIND_AUTO_CREATE)
     }
 
@@ -861,9 +851,8 @@ class MainFragment : Fragment() {
         binding.layoutPersistentBottomSheet.root.isVisible = isShow
     }
 
-    @SuppressLint("NotifyDataSetChanged")
     private fun loadPdfs() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        if (AndroidVersions.isTiramisu()) {
             if (activity?.hasNotificationsPermission()?.not() == true) {
                 setPermissionView(
                     isShow = true,
@@ -875,7 +864,7 @@ class MainFragment : Fragment() {
             }
         }
 
-        if (activity?.hasStoragePermission() == true) {
+        if (activity?.hasStoragePermissionApi30() == true) {
             var hasBooksInDb = false
             CoroutineScope(Dispatchers.IO).launch {
                 hasBooksInDb = bookViewModel.hasBooks()
@@ -922,15 +911,10 @@ class MainFragment : Fragment() {
             end = 8.dpToPx().toInt(),
             bottom = 0.dpToPx().toInt(),
         )
-//        binding.layoutPersistentBottomSheet.tvSelectLanguage.text = "Language: ${Locale.getDefault().displayName}"
     }
 
     private fun convertPdfToTextInWorker() {
-        val data = Data.Builder().apply {
-            putString(WorkerData.PDF_PATH, "")
-        }.build()
         val workRequest = OneTimeWorkRequestBuilder<PdfToTextWorker>()
-            .setInputData(data)
             .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
             .build()
         WorkManager.getInstance(requireContext()).enqueueUniqueWork(WorkerTag.PDF_TO_TEXT_CONVERTER, ExistingWorkPolicy.REPLACE, workRequest)
@@ -944,7 +928,6 @@ class MainFragment : Fragment() {
                 WorkInfo.State.RUNNING -> showProgressBar(true)
                 WorkInfo.State.ENQUEUED -> showProgressBar(true)
                 WorkInfo.State.SUCCEEDED -> {
-                    // TODO show manual rss url field
                     showProgressBar(false)
                 }
 

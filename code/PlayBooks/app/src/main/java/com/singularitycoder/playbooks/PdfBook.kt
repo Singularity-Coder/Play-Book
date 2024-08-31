@@ -9,5 +9,7 @@ data class PdfBook(
     var text: String? = "",
     var periodCountPerPageList: List<Int>,
     var periodPositionsList: List<Int>,
-    var periodToPageMap: HashMap<Int, Int>
+    var periodPosToPageNumMap: HashMap<String, Int>,
+    var pageNumToPeriodLengthMap: HashMap<String, Int>,
+    var periodLengthToPageNumMap: HashMap<String, Int>
 ) : Parcelable

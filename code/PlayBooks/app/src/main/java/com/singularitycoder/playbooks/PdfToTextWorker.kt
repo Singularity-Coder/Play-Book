@@ -7,7 +7,7 @@ import androidx.work.workDataOf
 import com.itextpdf.text.pdf.PdfReader
 import com.itextpdf.text.pdf.parser.PdfTextExtractor
 import com.singularitycoder.playbooks.helpers.WorkerData
-import com.singularitycoder.playbooks.helpers.db.PlayBookDatabase
+import com.singularitycoder.playbooks.helpers.db.PlayBooksDatabase
 import com.singularitycoder.playbooks.helpers.extension
 import com.singularitycoder.playbooks.helpers.getAppropriateSize
 import com.singularitycoder.playbooks.helpers.getBookCoversFileDir
@@ -26,10 +26,7 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.withContext
 import java.io.File
 
-/**
- * For setting progress - https://developer.android.com/develop/background-work/background-tasks/persistent/how-to/observe
- * */
-
+/** For setting progress - https://developer.android.com/develop/background-work/background-tasks/persistent/how-to/observe */
 class PdfToTextWorker(val context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams) {
 
     private var pageCount = 0
@@ -37,8 +34,7 @@ class PdfToTextWorker(val context: Context, workerParams: WorkerParameters) : Co
     @EntryPoint
     @InstallIn(SingletonComponent::class)
     interface ThisEntryPoint {
-        fun db(): PlayBookDatabase
-//        fun networkStatus(): NetworkStatus
+        fun db(): PlayBooksDatabase
     }
 
     override suspend fun doWork(): Result {
@@ -47,8 +43,6 @@ class PdfToTextWorker(val context: Context, workerParams: WorkerParameters) : Co
             val dbEntryPoint = EntryPointAccessors.fromApplication(appContext, ThisEntryPoint::class.java)
             val bookDao = dbEntryPoint.db().bookDao()
             val bookDataDao = dbEntryPoint.db().bookDataDao()
-//            val networkStatus = dbEntryPoint.networkStatus()
-            val path = inputData.getString(WorkerData.PDF_PATH)
 
             try {
                 val filesList = getFilesListFrom(folder = getDownloadDirectory()).sortedBy { it.sizeInBytes() } // sorted in asc to convert smaller books first
@@ -106,7 +100,6 @@ class PdfToTextWorker(val context: Context, workerParams: WorkerParameters) : Co
     private suspend fun File.toBookData(): BookData? {
         if (this.exists().not()) return null
 
-        // this must be added to new table with foreign key
         val pdfBook = this.getTextFromPdf { progress: Int, totalPages: Int ->
             setProgress(workDataOf(WorkerData.KEY_PROGRESS to ((progress * 100) / totalPages)))
         }
@@ -124,7 +117,9 @@ class PdfToTextWorker(val context: Context, workerParams: WorkerParameters) : Co
             pageCount = pdfBook.pageCount,
             periodCountPerPageList = pdfBook.periodCountPerPageList,
             periodPositionsList = pdfBook.periodPositionsList,
-            periodToPageMap = pdfBook.periodToPageMap
+            periodPosToPageNumMap = pdfBook.periodPosToPageNumMap,
+            pageNumToPeriodLengthMap = pdfBook.pageNumToPeriodLengthMap,
+            periodLengthToPageNumMap = pdfBook.periodLengthToPageNumMap
         )
     }
 
@@ -135,17 +130,25 @@ class PdfToTextWorker(val context: Context, workerParams: WorkerParameters) : Co
         var parsedText = ""
         val periodCountPerPageList = mutableListOf<Int>()
         val periodPositionsList = mutableListOf<Int>()
-        val periodToPageMap = HashMap<Int, Int>()
+        val periodPosToPageNumMap = HashMap<String, Int>()
+        val pageNumToPeriodLengthMap = HashMap<String, Int>()
+        val periodLengthToPageNumMap = HashMap<String, Int>()
         val reader = PdfReader(this.absolutePath)
+        var totalPeriodCount = 0
         for (i in 0 until reader.numberOfPages) {
             val pageString = PdfTextExtractor.getTextFromPage(reader, i + 1)
             var periodCountPerPage = 0
             pageString.forEachIndexed { index, char ->
                 if (char == '.') {
                     periodCountPerPage++
+                    totalPeriodCount++
                     periodPositionsList.add(parsedText.length + index)
                     /** Map period position to page */
-                    periodToPageMap[parsedText.length + index] = i
+                    periodPosToPageNumMap[(parsedText.length + index).toString()] = i
+                    /** Map the page to only last period position. Since map it will store only last iteration value */
+                    pageNumToPeriodLengthMap[i.toString()] = totalPeriodCount
+                    /** Map period length to page to advance to next page properly */
+                    periodLengthToPageNumMap[totalPeriodCount.toString()] = i
                 }
             }
             // Extracting the content from different pages - add new lines if necessary - "$parsedText${pageString.trim { it <= ' ' }}\n\n\n\n"
@@ -159,7 +162,9 @@ class PdfToTextWorker(val context: Context, workerParams: WorkerParameters) : Co
             text = parsedText.replace("\n", " "),
             periodCountPerPageList = periodCountPerPageList,
             periodPositionsList = periodPositionsList,
-            periodToPageMap = periodToPageMap
+            periodPosToPageNumMap = periodPosToPageNumMap,
+            pageNumToPeriodLengthMap = pageNumToPeriodLengthMap,
+            periodLengthToPageNumMap = periodLengthToPageNumMap
         )
     } catch (_: Exception) {
         null
