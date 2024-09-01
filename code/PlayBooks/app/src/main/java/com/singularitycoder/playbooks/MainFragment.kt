@@ -13,9 +13,9 @@ import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.Typeface
-import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
+import android.os.PowerManager
 import android.speech.tts.TextToSpeech
 import android.text.Editable
 import android.text.Spannable
@@ -57,6 +57,7 @@ import com.singularitycoder.playbooks.helpers.IntentExtraKey
 import com.singularitycoder.playbooks.helpers.IntentExtraValue
 import com.singularitycoder.playbooks.helpers.IntentKey
 import com.singularitycoder.playbooks.helpers.TtsConstants
+import com.singularitycoder.playbooks.helpers.WakeLockKey
 import com.singularitycoder.playbooks.helpers.WorkerData
 import com.singularitycoder.playbooks.helpers.WorkerTag
 import com.singularitycoder.playbooks.helpers.clipboard
@@ -126,6 +127,8 @@ class MainFragment : Fragment() {
     private var playBookForegroundService: PlayBookForegroundService? = null
 
     private var isServiceBound = false
+
+    private var wakeLock: PowerManager.WakeLock? = null
 
     private val messageReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -266,6 +269,7 @@ class MainFragment : Fragment() {
             isServiceBound = false
         }
 
+        releaseWakeLock()
         LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(messageReceiver)
     }
 
@@ -748,7 +752,7 @@ class MainFragment : Fragment() {
                     }
 
                     optionsList[4].first -> {
-//                        stopForegroundService()
+                        // stopForegroundService()
                         playBookForegroundService?.stopTts()
                         bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
                         showPlayerView(false)
@@ -825,17 +829,22 @@ class MainFragment : Fragment() {
     }
 
     private fun startForegroundService(book: Book?) {
+        fun startService() {
+            val intent = Intent(context, PlayBookForegroundService::class.java).apply {
+                putExtra(IntentExtraKey.BOOK_ID, book?.id ?: "")
+            }
+            activity?.application?.startForegroundService(intent)
+            /** bind to the service to update UI */
+            activity?.bindService(intent, playerConnection, Context.BIND_AUTO_CREATE)
+        }
+
         if (playBookForegroundService != null) {
             playBookForegroundService?.stopTts()
             playBookForegroundService?.loadData(book?.id ?: "")
             return
         }
-        val intent = Intent(context, PlayBookForegroundService::class.java).apply {
-            putExtra(IntentExtraKey.BOOK_ID, book?.id ?: "")
-        }
-        activity?.application?.startForegroundService(intent)
-        /** bind to the service to update UI */
-        activity?.bindService(intent, playerConnection, Context.BIND_AUTO_CREATE)
+
+        startService()
     }
 
     private fun stopForegroundService() {
@@ -913,7 +922,15 @@ class MainFragment : Fragment() {
         )
     }
 
+    @SuppressLint("WakelockTimeout")
     private fun convertPdfToTextInWorker() {
+        /** This is to make sure books are loading even if screen is turned off. Keeps CPU awake. */
+        wakeLock = (requireContext().getSystemService(Context.POWER_SERVICE) as PowerManager).run {
+            newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WakeLockKey.LOADING_BOOKS).apply {
+                acquire()
+            }
+        }
+
         val workRequest = OneTimeWorkRequestBuilder<PdfToTextWorker>()
             .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
             .build()
@@ -929,13 +946,28 @@ class MainFragment : Fragment() {
                 WorkInfo.State.ENQUEUED -> showProgressBar(true)
                 WorkInfo.State.SUCCEEDED -> {
                     showProgressBar(false)
+                    releaseWakeLock()
                 }
 
-                WorkInfo.State.FAILED -> showProgressBar(false)
+                WorkInfo.State.FAILED -> {
+                    showProgressBar(false)
+                    releaseWakeLock()
+                }
+
                 WorkInfo.State.BLOCKED -> showProgressBar(true)
-                WorkInfo.State.CANCELLED -> showProgressBar(false)
+                WorkInfo.State.CANCELLED -> {
+                    showProgressBar(false)
+                    releaseWakeLock()
+                }
+
                 else -> Unit
             }
+        }
+    }
+
+    private fun releaseWakeLock() {
+        if (wakeLock?.isHeld == true) {
+            wakeLock?.release()
         }
     }
 

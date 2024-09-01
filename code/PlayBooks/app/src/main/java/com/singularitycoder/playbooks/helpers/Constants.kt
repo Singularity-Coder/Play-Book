@@ -23,6 +23,11 @@ object FragmentResultKey {
 object FragmentResultBundleKey {
 }
 
+object WakeLockKey {
+    const val LOADING_BOOKS = "${BuildConfig.APPLICATION_ID}:LOADING_BOOKS"
+    const val PLAYING_BOOK = "${BuildConfig.APPLICATION_ID}:PLAYING_BOOK"
+}
+
 enum class NotificationAction {
     PREVIOUS_SENTENCE,
     NEXT_SENTENCE,
