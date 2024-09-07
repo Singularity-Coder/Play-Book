@@ -110,7 +110,7 @@ class MainFragment : Fragment() {
 
     private var previousConfig: Configuration? = null
 
-    private val booksAdapter = DownloadsAdapter()
+    private val booksAdapter = BooksAdapter()
 
     private var booksList = listOf<Book?>()
 

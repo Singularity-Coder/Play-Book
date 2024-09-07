@@ -1,6 +1,5 @@
 package com.singularitycoder.playbooks
 
-import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,7 +13,7 @@ import com.singularitycoder.playbooks.helpers.onCustomLongClick
 import com.singularitycoder.playbooks.helpers.onSafeClick
 import java.io.File
 
-class DownloadsAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class BooksAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     var bookList = emptyList<Book?>()
     private var itemClickListener: (book: Book?, position: Int) -> Unit = { _, _ -> }
@@ -50,7 +49,7 @@ class DownloadsAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     inner class ThisViewHolder(
         private val itemBinding: ListItemBookBinding,
     ) : RecyclerView.ViewHolder(itemBinding.root) {
-        @SuppressLint("SetJavaScriptEnabled")
+
         fun setData(book: Book?) {
             itemBinding.apply {
                 itemBinding.root.animate().run {

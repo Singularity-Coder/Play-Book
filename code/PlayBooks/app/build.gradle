@@ -82,6 +82,7 @@ dependencies {
     implementation libs.itextg // This has security issues https://github.com/itext/itextpdf
 //    implementation libs.pdfium.android // PDF previews - https://github.com/barteksc/PdfiumAndroid
 
+    // Test
     testImplementation libs.junit
     androidTestImplementation libs.androidx.junit
     androidTestImplementation libs.androidx.espresso.core

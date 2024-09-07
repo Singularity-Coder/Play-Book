@@ -119,7 +119,7 @@ fun Context.showAlertDialog(
         dialog.getButton(DialogInterface.BUTTON_POSITIVE).apply {
             setHapticFeedback()
             isAllCaps = false
-            setPadding(0, 0, 16.dpToPx().toInt(), 0)
+//            setPadding(0, 0, 16.dpToPx().toInt(), 0)
             if (positiveBtnColor != null) setTextColor(this@showAlertDialog.color(positiveBtnColor))
         }
         dialog.getButton(DialogInterface.BUTTON_NEGATIVE).apply {
@@ -130,7 +130,7 @@ fun Context.showAlertDialog(
         dialog.getButton(DialogInterface.BUTTON_NEUTRAL).apply {
             setHapticFeedback()
             isAllCaps = false
-            setPadding(16.dpToPx().toInt(), 0, 0, 0)
+//            setPadding(16.dpToPx().toInt(), 0, 0, 0)
             if (neutralBtnColor != null) setTextColor(this@showAlertDialog.color(neutralBtnColor))
         }
     }
