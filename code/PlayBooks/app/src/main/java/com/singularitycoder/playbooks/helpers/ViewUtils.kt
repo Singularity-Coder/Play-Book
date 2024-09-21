@@ -366,7 +366,7 @@ fun View.setHapticFeedback() {
 
 // https://stackoverflow.com/questions/5608720/android-preventing-double-click-on-a-button
 fun View.onSafeClick(
-    delayAfterClick: Long = 700.milliSeconds(),
+    delayAfterClick: Long = 200.milliSeconds(),
     onSafeClick: (Pair<View?, Boolean>) -> Unit
 ) {
     val onSafeClickListener = OnSafeClickListener(delayAfterClick, onSafeClick)

@@ -204,8 +204,8 @@ class MainFragment : Fragment() {
         isGranted ?: return@registerForActivityResult
         if (isGranted.not()) {
             askNotificationPermission()
-            val accessFineLocationNeedsRationale = activity?.shouldShowRationaleFor(android.Manifest.permission.POST_NOTIFICATIONS) == true
-            if (accessFineLocationNeedsRationale) {
+            val needsRationale = activity?.shouldShowRationaleFor(android.Manifest.permission.POST_NOTIFICATIONS) == true
+            if (needsRationale) {
                 requireContext().showAlertDialog(
                     title = "Grant permission",
                     message = "You must grant notification permission to play E-Books.",
