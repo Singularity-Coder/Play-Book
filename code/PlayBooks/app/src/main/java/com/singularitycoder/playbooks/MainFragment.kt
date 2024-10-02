@@ -300,7 +300,10 @@ class MainFragment : Fragment() {
         requireActivity().setNavigationBarColor(R.color.white)
         rvBooks.apply {
             layoutAnimation = rvBooks.context.layoutAnimationController(globalLayoutAnimation)
-            layoutManager = LinearLayoutManager(context)
+            layoutManager = LinearLayoutManager(context).apply {
+                stackFromEnd = true
+                reverseLayout = true
+            }
             adapter = booksAdapter
         }
         layoutSearch.etSearch.hint = "Search in ${getDownloadDirectory().name}"
