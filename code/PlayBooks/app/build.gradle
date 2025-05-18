@@ -19,6 +19,19 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
+        /**
+         * arm64-v8a is not an OS or firmware. Its ABI (Application Binary Interface).
+         * It describes CPU architecture and calling conventions used by native code in Android Apps.
+         * When u build an Android app that includes native libs like .so files, u compile them to specific ABIs.
+         *
+         * In this case arm64-v8a
+         * arm: ARM processors
+         * 64: 64-bit architecture
+         * v8a: ARMv8-A architecture
+         *
+         * You can remove all other ABIs (armeabi-v7a, x86, etc.) since ur target devices are all 64 bit since:
+         * 64-bit, ARM-based, Running Android 12+. This can save up to 5 MB. For efficient delivery, use AAB.
+         * */
         ndk {
             abiFilters "arm64-v8a"
         }
@@ -26,7 +39,39 @@ android {
 
     buildTypes {
         release {
+            /*
+            * minifyEnabled & shrinkResources
+            * https://developer.android.com/build/shrink-code
+            *
+            * Remove unused resources like drawables, layouts, and strings.
+            * Check proguard-rules.pro file in app module to tell R8 not to shrink particular dependencies.
+            *
+            * When using code shrinkers like ProGuard or R8,
+            * they can remove generic type information if not properly configured.
+            * A lot of its code was being removed due to reflection, annotations etc.
+            *
+            * DEBUGGING R8 ISSUES:
+            *
+            * Test it on release builds - ./gradlew assembleRelease
+            *
+            * Enable R8 full tracing in gradle.properties:
+            * android.enableR8.fullMode=true
+            *
+            * This gives a slimmer, more accurate view of what will be bundled in release mode.
+            * ./gradlew app:dependencies --configuration releaseRuntimeClasspath
+            *
+            * Check whats available in dependencies
+            * ./gradlew app:dependencies
+            *
+            * ./gradlew clean
+            * ./gradlew assembleRelease
+            * ./gradlew installRelease
+            * */
+
+            // Enable code shrinking (R8/ProGuard)
             minifyEnabled true
+
+            // Enable resource shrinking
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
