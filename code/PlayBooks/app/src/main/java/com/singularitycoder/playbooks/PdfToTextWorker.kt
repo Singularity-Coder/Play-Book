@@ -8,6 +8,7 @@ import com.itextpdf.text.pdf.PdfReader
 import com.itextpdf.text.pdf.parser.PdfTextExtractor
 import com.singularitycoder.playbooks.helpers.WorkerData
 import com.singularitycoder.playbooks.helpers.db.PlayBooksDatabase
+import com.singularitycoder.playbooks.helpers.di.IoDispatcher
 import com.singularitycoder.playbooks.helpers.extension
 import com.singularitycoder.playbooks.helpers.getAppropriateSize
 import com.singularitycoder.playbooks.helpers.getBookCoversFileDir
@@ -22,12 +23,15 @@ import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import java.io.File
 
 /** For setting progress - https://developer.android.com/develop/background-work/background-tasks/persistent/how-to/observe */
-class PdfToTextWorker(val context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams) {
+class PdfToTextWorker(
+    val context: Context,
+    workerParams: WorkerParameters
+) : CoroutineWorker(context, workerParams) {
 
     private var pageCount = 0
 
@@ -35,15 +39,18 @@ class PdfToTextWorker(val context: Context, workerParams: WorkerParameters) : Co
     @InstallIn(SingletonComponent::class)
     interface ThisEntryPoint {
         fun db(): PlayBooksDatabase
+        @IoDispatcher
+        fun ioDispatcher(): CoroutineDispatcher
     }
 
     override suspend fun doWork(): Result {
-        return withContext(IO) {
-            val appContext = context.applicationContext ?: throw IllegalStateException()
-            val dbEntryPoint = EntryPointAccessors.fromApplication(appContext, ThisEntryPoint::class.java)
-            val bookDao = dbEntryPoint.db().bookDao()
-            val bookDataDao = dbEntryPoint.db().bookDataDao()
+        val appContext = context.applicationContext ?: throw IllegalStateException()
+        val dbEntryPoint = EntryPointAccessors.fromApplication(appContext, ThisEntryPoint::class.java)
+        val ioDispatcher = dbEntryPoint.ioDispatcher()
+        val bookDao = dbEntryPoint.db().bookDao()
+        val bookDataDao = dbEntryPoint.db().bookDataDao()
 
+        return withContext(ioDispatcher) {
             try {
                 val filesList = getFilesListFrom(folder = getDownloadDirectory()).sortedBy { it.sizeInBytes() } // sorted in asc to convert smaller books first
                 findPdf(filesList, bookDao, bookDataDao)

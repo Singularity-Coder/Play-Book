@@ -95,6 +95,7 @@ import com.singularitycoder.playbooks.helpers.showToast
 import com.singularitycoder.playbooks.helpers.showTtsSettings
 import com.singularitycoder.playbooks.helpers.showWebPage
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -102,7 +103,6 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.Locale
 import javax.inject.Inject
-import kotlin.coroutines.CoroutineContext
 
 @AndroidEntryPoint
 class MainFragment : Fragment() {
@@ -116,11 +116,11 @@ class MainFragment : Fragment() {
 
     @Inject
     @IoDispatcher
-    lateinit var ioDispatcher: CoroutineContext
+    lateinit var ioDispatcher: CoroutineDispatcher
 
     @Inject
     @MainDispatcher
-    lateinit var mainDispatcher: CoroutineContext
+    lateinit var mainDispatcher: CoroutineDispatcher
 
     @Inject
     lateinit var preferencesRepository: PreferencesRepository
