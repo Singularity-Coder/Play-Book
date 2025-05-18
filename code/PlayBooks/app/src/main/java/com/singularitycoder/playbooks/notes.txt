@@ -65,3 +65,13 @@ ERRORS:--------------------------------------------------
 
 android.os.FileUriExposedException: file:///storage/emulated/0/Download/The%20Enchanted%20April%20-%20Elizabeth%20von%20Arnim.pdf exposed beyond app through Intent.getData()
 https://stackoverflow.com/a/38858040/6802949
+
+STUDIO ISSUES:--------------------------------------------------
+Sometimes when opening the project, app config is missing and am unable to select the module in the dropdown.
+ - Follow the standard invalidate caches
+ - If for some reason these buttons are disabled
+ ./gradlew clean
+ ./gradlew build
+ - Then in the Edit config, choose add a gradle profile instead of android profile -> This gives sync options.
+ - Then add an android profile
+
