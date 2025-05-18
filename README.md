@@ -1,6 +1,6 @@
 ![alt text](https://github.com/Singularity-Coder/Instant-SQLite/blob/main/assets/logo192.png)
 # Play Book
-Listen to your e-books! [Download APK](/Users/harekrsna/Desktop/Work/Play-Book/assets/app-debug.apk)
+Listen to your e-books! [Download APK](https://github.com/Singularity-Coder/Play-Book/blob/main/assets/app-debug.apk)
 
 ## Screenshots
 ![alt text](https://github.com/Singularity-Coder/Instant-SQLite/blob/main/assets/sc1.png)
