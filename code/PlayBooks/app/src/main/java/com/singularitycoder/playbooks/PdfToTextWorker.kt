@@ -39,16 +39,17 @@ class PdfToTextWorker(
     @InstallIn(SingletonComponent::class)
     interface ThisEntryPoint {
         fun db(): PlayBooksDatabase
+
         @IoDispatcher
         fun ioDispatcher(): CoroutineDispatcher
     }
 
     override suspend fun doWork(): Result {
         val appContext = context.applicationContext ?: throw IllegalStateException()
-        val dbEntryPoint = EntryPointAccessors.fromApplication(appContext, ThisEntryPoint::class.java)
-        val ioDispatcher = dbEntryPoint.ioDispatcher()
-        val bookDao = dbEntryPoint.db().bookDao()
-        val bookDataDao = dbEntryPoint.db().bookDataDao()
+        val entryPoint = EntryPointAccessors.fromApplication(appContext, ThisEntryPoint::class.java)
+        val ioDispatcher = entryPoint.ioDispatcher()
+        val bookDao = entryPoint.db().bookDao()
+        val bookDataDao = entryPoint.db().bookDataDao()
 
         return withContext(ioDispatcher) {
             try {

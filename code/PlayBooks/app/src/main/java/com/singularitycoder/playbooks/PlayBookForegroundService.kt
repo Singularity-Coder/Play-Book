@@ -17,24 +17,28 @@ import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import androidx.core.app.ServiceCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import com.singularitycoder.playbooks.helpers.AppPreferences
 import com.singularitycoder.playbooks.helpers.IntentExtraKey
 import com.singularitycoder.playbooks.helpers.IntentExtraValue
 import com.singularitycoder.playbooks.helpers.IntentKey
 import com.singularitycoder.playbooks.helpers.NotificationAction
 import com.singularitycoder.playbooks.helpers.NotificationsHelper
+import com.singularitycoder.playbooks.helpers.PreferencesRepository
 import com.singularitycoder.playbooks.helpers.TTS_LANGUAGE_LIST
 import com.singularitycoder.playbooks.helpers.TtsTag
 import com.singularitycoder.playbooks.helpers.db.PlayBooksDatabase
+import com.singularitycoder.playbooks.helpers.di.IoDispatcher
+import com.singularitycoder.playbooks.helpers.di.MainDispatcher
 import com.singularitycoder.playbooks.helpers.getBookCoversFileDir
 import com.singularitycoder.playbooks.helpers.toBitmap
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -54,6 +58,14 @@ class PlayBookForegroundService : Service() {
     @InstallIn(SingletonComponent::class)
     interface ThisEntryPoint {
         fun db(): PlayBooksDatabase
+
+        @IoDispatcher
+        fun ioDispatcher(): CoroutineDispatcher
+
+        @MainDispatcher
+        fun mainDispatcher(): CoroutineDispatcher
+
+        fun preferenceRepository(): PreferencesRepository
     }
 
     private var tts: TextToSpeech? = null
@@ -80,6 +92,11 @@ class PlayBookForegroundService : Service() {
     private var currentlyPlayingText: CharSequence? = null
 
     private var bookCoverBitmap: Bitmap? = null
+
+    private lateinit var ioScope: CoroutineScope
+    private lateinit var ioDispatcher: CoroutineDispatcher
+    private lateinit var mainDispatcher: CoroutineDispatcher
+    private lateinit var preferencesRepository: PreferencesRepository
 
     /** This will handle notification button clicks. This receiver should be here as when app
      * is killed this service must be self sufficient and cannot depend on killed app resources */
@@ -132,9 +149,13 @@ class PlayBookForegroundService : Service() {
         )
         ttsParams.putString(TextToSpeech.Engine.KEY_PARAM_STREAM, AudioManager.STREAM_ALARM.toString())
         val appContext = this.applicationContext ?: throw IllegalStateException()
-        val dbEntryPoint = EntryPointAccessors.fromApplication(appContext, com.singularitycoder.playbooks.PdfToTextWorker.ThisEntryPoint::class.java)
-        bookDao = dbEntryPoint.db().bookDao()
-        bookDataDao = dbEntryPoint.db().bookDataDao()
+        val entryPoint = EntryPointAccessors.fromApplication(appContext, ThisEntryPoint::class.java)
+        ioDispatcher = entryPoint.ioDispatcher()
+        mainDispatcher = entryPoint.mainDispatcher()
+        ioScope = CoroutineScope(ioDispatcher + SupervisorJob())
+        preferencesRepository = entryPoint.preferenceRepository()
+        bookDao = entryPoint.db().bookDao()
+        bookDataDao = entryPoint.db().bookDataDao()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -144,7 +165,19 @@ class PlayBookForegroundService : Service() {
             /* context = */ this,
             /* listener = */ object : TextToSpeech.OnInitListener {
                 override fun onInit(p0: Int) {
-                    doWhenTtsIsReady()
+                    ioScope.launch {
+                        val ttsLanguage = preferencesRepository.getTtsLanguage()
+                        val ttsSpeechRate = preferencesRepository.getTtsSpeechRate()
+                        val ttsPitch = preferencesRepository.getTtsPitch()
+
+                        withContext(mainDispatcher) {
+                            doWhenTtsIsReady(
+                                ttsLanguage = ttsLanguage,
+                                ttsSpeechRate = ttsSpeechRate,
+                                ttsPitch = ttsPitch
+                            )
+                        }
+                    }
                 }
             }
         )
@@ -152,7 +185,11 @@ class PlayBookForegroundService : Service() {
         return super.onStartCommand(intent, flags, startId)
     }
 
-    private fun doWhenTtsIsReady() {
+    private fun doWhenTtsIsReady(
+        ttsLanguage: String,
+        ttsSpeechRate: Int,
+        ttsPitch: Int
+    ) {
         Log.d(TAG, "Text-To-Speech engine is ready.")
 
         availableLanguages.add(Locale.getDefault())
@@ -162,9 +199,9 @@ class PlayBookForegroundService : Service() {
                 availableLanguages.add(locale)
             }
         }
-        tts?.setLanguage(availableLanguages.find { it.displayName == AppPreferences.getInstance().ttsLanguage })
-        setTtsPitch(AppPreferences.getInstance().ttsPitch.toFloat())
-        setTtsSpeechRate(AppPreferences.getInstance().ttsSpeechRate.toFloat())
+        tts?.setLanguage(availableLanguages.find { it.displayName == ttsLanguage })
+        setTtsPitch(ttsPitch.toFloat())
+        setTtsSpeechRate(ttsSpeechRate.toFloat())
 
         /** setOnUtteranceProgressListener must be set after tts is init
          * https://stackoverflow.com/questions/52233235/setonutteranceprogresslistener-not-at-all-working-for-text-to-speech-for-api-2 */

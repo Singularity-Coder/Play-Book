@@ -22,8 +22,8 @@ class PreferencesRepository @Inject constructor(
         val TTS_LANGUAGE = stringPreferencesKey("TTS_LANGUAGE")
     }
 
-    suspend fun getTtsSpeechRate(): Int? {
-        return context.dataStore.data.first()[Key.TTS_SPEECH_RATE_PREF]
+    suspend fun getTtsSpeechRate(): Int {
+        return context.dataStore.data.first()[Key.TTS_SPEECH_RATE_PREF] ?: TtsConstants.DEFAULT
     }
 
     suspend fun setTtsSpeechRate(speech: Int) {
@@ -32,8 +32,8 @@ class PreferencesRepository @Inject constructor(
         }
     }
 
-    suspend fun getTtsPitch(): Int? {
-        return context.dataStore.data.first()[Key.TTS_PITCH_PREF]
+    suspend fun getTtsPitch(): Int {
+        return context.dataStore.data.first()[Key.TTS_PITCH_PREF] ?: TtsConstants.DEFAULT
     }
 
     suspend fun setTtsPitch(pitch: Int) {
