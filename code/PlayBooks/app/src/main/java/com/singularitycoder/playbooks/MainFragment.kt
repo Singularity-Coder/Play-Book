@@ -38,6 +38,7 @@ import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.work.ExistingWorkPolicy
@@ -56,6 +57,7 @@ import com.singularitycoder.playbooks.helpers.FILE_PROVIDER
 import com.singularitycoder.playbooks.helpers.IntentExtraKey
 import com.singularitycoder.playbooks.helpers.IntentExtraValue
 import com.singularitycoder.playbooks.helpers.IntentKey
+import com.singularitycoder.playbooks.helpers.PreferencesRepository
 import com.singularitycoder.playbooks.helpers.TtsConstants
 import com.singularitycoder.playbooks.helpers.WakeLockKey
 import com.singularitycoder.playbooks.helpers.WorkerData
@@ -65,6 +67,8 @@ import com.singularitycoder.playbooks.helpers.collectLatestLifecycleFlow
 import com.singularitycoder.playbooks.helpers.deleteAllFilesFrom
 import com.singularitycoder.playbooks.helpers.deleteFileFrom
 import com.singularitycoder.playbooks.helpers.deviceHeight
+import com.singularitycoder.playbooks.helpers.di.IoDispatcher
+import com.singularitycoder.playbooks.helpers.di.MainDispatcher
 import com.singularitycoder.playbooks.helpers.dpToPx
 import com.singularitycoder.playbooks.helpers.drawable
 import com.singularitycoder.playbooks.helpers.getBookCoversFileDir
@@ -97,6 +101,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.Locale
+import javax.inject.Inject
+import kotlin.coroutines.CoroutineContext
 
 @AndroidEntryPoint
 class MainFragment : Fragment() {
@@ -107,6 +113,17 @@ class MainFragment : Fragment() {
         @JvmStatic
         fun newInstance() = MainFragment()
     }
+
+    @Inject
+    @IoDispatcher
+    lateinit var ioDispatcher: CoroutineContext
+
+    @Inject
+    @MainDispatcher
+    lateinit var mainDispatcher: CoroutineContext
+
+    @Inject
+    lateinit var preferencesRepository: PreferencesRepository
 
     private var previousConfig: Configuration? = null
 
@@ -309,6 +326,16 @@ class MainFragment : Fragment() {
         layoutSearch.etSearch.hint = "Search in ${getDownloadDirectory().name}"
         setUpPersistentBottomSheet()
         checkTtsExists()
+        lifecycleScope.launch(ioDispatcher) {
+            val ttsLanguage = preferencesRepository.getTtsLanguage()
+            val ttsSpeechRate = preferencesRepository.getTtsSpeechRate()
+            val ttsPitch = preferencesRepository.getTtsPitch()
+
+            withContext(mainDispatcher) {
+
+            }
+        }
+
         selectedTtsLanguage = AppPreferences.getInstance().ttsLanguage
         layoutPersistentBottomSheet.layoutSliderPlayback.apply {
             tvSliderTitle.text = "Page"
